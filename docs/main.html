@@ -1,0 +1,831 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Source code &mdash; kbdwtchdg 0.9 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="kbdwtchdg 0.9 documentation" href="index.html"/>
+        <link rel="next" title="Changelog" href="changelog.html"/>
+        <link rel="prev" title="Project setup" href="setup.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> kbdwtchdg
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.9
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Project setup</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Source code</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#definitions">Definitions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usb-functions">USB Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#oscillator-calibration">Oscillator Calibration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ascii-to-keycode">ASCII to Keycode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#background-tasks">Background tasks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#variables">Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#timer-setup">Timer setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#activating-an-led">Activating an LED</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#main-function">main() function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#interrupt">Interrupt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#copyright">Copyright</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">kbdwtchdg</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Source code</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/main.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="source-code">
+<h1>Source code<a class="headerlink" href="#source-code" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="definitions">
+<h2>Definitions<a class="headerlink" href="#definitions" title="Permalink to this headline">¶</a></h2>
+<p>The following libraries need to be included:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;avr/io.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;avr/interrupt.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;avr/wdt.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;avr/pgmspace.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;avr/eeprom.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+
+<span class="cp">#include</span> <span class="cpf">&quot;usbdrv/usbdrv.h&quot;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&quot;usbdrv/usbconfig.h&quot;</span><span class="cp"></span>
+
+<span class="cp">#define F_CPU 16500000L</span>
+<span class="cp">#include</span> <span class="cpf">&lt;util/delay.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>Defining the bits to set LED outputs:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cp">#define LED_RED (1 &lt;&lt; PB4) </span><span class="c1">//Turn on red led</span>
+<span class="cp">#define LED_GREEN (1 &lt;&lt; PB3) </span><span class="c1">//Turn on green led</span>
+<span class="cp">#define LED_YELLOW (1 &lt;&lt; PB0) </span><span class="c1">//Turn on yellow led</span>
+</pre></div>
+</div>
+<p>The ATtiny85 Microcontroller needs some definitions to be recognized as a keyboard:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="c1">// USB HID report descriptor for boot protocol keyboard</span>
+<span class="c1">// see HID1_11.pdf appendix B section 1</span>
+<span class="c1">// USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH is defined in usbconfig</span>
+<span class="n">PROGMEM</span> <span class="kt">char</span> <span class="n">usbHidReportDescriptor</span><span class="p">[</span><span class="n">USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mh">0x05</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span>                    <span class="c1">// USAGE_PAGE (Generic Desktop)</span>
+        <span class="mh">0x09</span><span class="p">,</span> <span class="mh">0x06</span><span class="p">,</span>                    <span class="c1">// USAGE (Keyboard)</span>
+        <span class="mh">0xa1</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span>                    <span class="c1">// COLLECTION (Application)</span>
+        <span class="mh">0x75</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span>                    <span class="c1">//   REPORT_SIZE (1)</span>
+        <span class="mh">0x95</span><span class="p">,</span> <span class="mh">0x08</span><span class="p">,</span>                    <span class="c1">//   REPORT_COUNT (8)</span>
+        <span class="mh">0x05</span><span class="p">,</span> <span class="mh">0x07</span><span class="p">,</span>                    <span class="c1">//   USAGE_PAGE (Keyboard)(Key Codes)</span>
+        <span class="mh">0x19</span><span class="p">,</span> <span class="mh">0xe0</span><span class="p">,</span>                    <span class="c1">//   USAGE_MINIMUM (Keyboard LeftControl)(224)</span>
+        <span class="mh">0x29</span><span class="p">,</span> <span class="mh">0xe7</span><span class="p">,</span>                    <span class="c1">//   USAGE_MAXIMUM (Keyboard Right GUI)(231)</span>
+        <span class="mh">0x15</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span>                    <span class="c1">//   LOGICAL_MINIMUM (0)</span>
+        <span class="mh">0x25</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span>                    <span class="c1">//   LOGICAL_MAXIMUM (1)</span>
+        <span class="mh">0x81</span><span class="p">,</span> <span class="mh">0x02</span><span class="p">,</span>                    <span class="c1">//   INPUT (Data,Var,Abs) ; Modifier byte</span>
+        <span class="mh">0x95</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span>                    <span class="c1">//   REPORT_COUNT (1)</span>
+        <span class="mh">0x75</span><span class="p">,</span> <span class="mh">0x08</span><span class="p">,</span>                    <span class="c1">//   REPORT_SIZE (8)</span>
+        <span class="mh">0x81</span><span class="p">,</span> <span class="mh">0x03</span><span class="p">,</span>                    <span class="c1">//   INPUT (Cnst,Var,Abs) ; Reserved byte</span>
+        <span class="mh">0x95</span><span class="p">,</span> <span class="mh">0x05</span><span class="p">,</span>                    <span class="c1">//   REPORT_COUNT (5)</span>
+        <span class="mh">0x75</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span>                    <span class="c1">//   REPORT_SIZE (1)</span>
+        <span class="mh">0x05</span><span class="p">,</span> <span class="mh">0x08</span><span class="p">,</span>                    <span class="c1">//   USAGE_PAGE (LEDs)</span>
+        <span class="mh">0x19</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span>                    <span class="c1">//   USAGE_MINIMUM (Num Lock)</span>
+        <span class="mh">0x29</span><span class="p">,</span> <span class="mh">0x05</span><span class="p">,</span>                    <span class="c1">//   USAGE_MAXIMUM (Kana)</span>
+        <span class="mh">0x91</span><span class="p">,</span> <span class="mh">0x02</span><span class="p">,</span>                    <span class="c1">//   OUTPUT (Data,Var,Abs) ; LED report</span>
+        <span class="mh">0x95</span><span class="p">,</span> <span class="mh">0x01</span><span class="p">,</span>                    <span class="c1">//   REPORT_COUNT (1)</span>
+        <span class="mh">0x75</span><span class="p">,</span> <span class="mh">0x03</span><span class="p">,</span>                    <span class="c1">//   REPORT_SIZE (3)</span>
+        <span class="mh">0x91</span><span class="p">,</span> <span class="mh">0x03</span><span class="p">,</span>                    <span class="c1">//   OUTPUT (Cnst,Var,Abs) ; LED report padding</span>
+        <span class="mh">0x95</span><span class="p">,</span> <span class="mh">0x06</span><span class="p">,</span>                    <span class="c1">//   REPORT_COUNT (6)</span>
+        <span class="mh">0x75</span><span class="p">,</span> <span class="mh">0x08</span><span class="p">,</span>                    <span class="c1">//   REPORT_SIZE (8)</span>
+        <span class="mh">0x15</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span>                    <span class="c1">//   LOGICAL_MINIMUM (0)</span>
+        <span class="mh">0x25</span><span class="p">,</span> <span class="mh">0x65</span><span class="p">,</span>                    <span class="c1">//   LOGICAL_MAXIMUM (101)</span>
+        <span class="mh">0x05</span><span class="p">,</span> <span class="mh">0x07</span><span class="p">,</span>                    <span class="c1">//   USAGE_PAGE (Keyboard)(Key Codes)</span>
+        <span class="mh">0x19</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span>                    <span class="c1">//   USAGE_MINIMUM (Reserved (no event indicated))(0)</span>
+        <span class="mh">0x29</span><span class="p">,</span> <span class="mh">0x65</span><span class="p">,</span>                    <span class="c1">//   USAGE_MAXIMUM (Keyboard Application)(101)</span>
+        <span class="mh">0x81</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span>                    <span class="c1">//   INPUT (Data,Ary,Abs)</span>
+        <span class="mh">0xc0</span>                           <span class="c1">// END_COLLECTION</span>
+<span class="p">};</span>
+
+<span class="c1">// data structure for boot protocol keyboard report</span>
+<span class="c1">// see HID1_11.pdf appendix B section 1</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
+        <span class="kt">uint8_t</span> <span class="n">modifier</span><span class="p">;</span>
+        <span class="kt">uint8_t</span> <span class="n">reserved</span><span class="p">;</span>
+        <span class="kt">uint8_t</span> <span class="n">keycode</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>
+<span class="p">}</span> <span class="n">keyboard_report_t</span><span class="p">;</span>
+
+<span class="c1">// global variables</span>
+
+<span class="k">static</span> <span class="n">keyboard_report_t</span> <span class="n">keyboard_report</span><span class="p">;</span>
+<span class="cp">#define keyboard_report_reset() keyboard_report.modifier=0;keyboard_report.reserved=0;keyboard_report.keycode[0]=0;keyboard_report.keycode[1]=0;keyboard_report.keycode[2]=0;keyboard_report.keycode[3]=0;keyboard_report.keycode[4]=0;keyboard_report.keycode[5]=0;</span>
+<span class="k">static</span> <span class="kt">uint8_t</span> <span class="n">idle_rate</span> <span class="o">=</span> <span class="mi">500</span> <span class="o">/</span> <span class="mi">4</span><span class="p">;</span> <span class="c1">// see HID1_11.pdf sect 7.2.4</span>
+<span class="k">static</span> <span class="kt">uint8_t</span> <span class="n">protocol_version</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// see HID1_11.pdf sect 7.2.6</span>
+<span class="k">static</span> <span class="kt">uint8_t</span> <span class="n">LED_state</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// see HID1_11.pdf appendix B section 1</span>
+<span class="k">static</span> <span class="kt">uint8_t</span> <span class="n">blink_count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// keep track of how many times caps lock have toggled</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="usb-functions">
+<h2>USB Functions<a class="headerlink" href="#usb-functions" title="Permalink to this headline">¶</a></h2>
+<p>The following functions are called to communicate with the computer:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="c1">// see http://vusb.wikidot.com/driver-api</span>
+<span class="c1">// constants are found in usbdrv.h</span>
+<span class="n">usbMsgLen_t</span> <span class="nf">usbFunctionSetup</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="n">data</span><span class="p">[</span><span class="mi">8</span><span class="p">])</span>
+<span class="p">{</span>
+        <span class="c1">// see HID1_11.pdf sect 7.2 and http://vusb.wikidot.com/driver-api</span>
+        <span class="n">usbRequest_t</span> <span class="o">*</span><span class="n">rq</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span><span class="n">data</span><span class="p">;</span>
+
+        <span class="k">if</span> <span class="p">((</span><span class="n">rq</span><span class="o">-&gt;</span><span class="n">bmRequestType</span> <span class="o">&amp;</span> <span class="n">USBRQ_TYPE_MASK</span><span class="p">)</span> <span class="o">!=</span> <span class="n">USBRQ_TYPE_CLASS</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// ignore request if it&#39;s not a class specific request</span>
+
+        <span class="c1">// see HID1_11.pdf sect 7.2</span>
+        <span class="k">switch</span> <span class="p">(</span><span class="n">rq</span><span class="o">-&gt;</span><span class="n">bRequest</span><span class="p">)</span>
+        <span class="p">{</span>
+                <span class="k">case</span> <span class="nl">USBRQ_HID_GET_IDLE</span><span class="p">:</span>
+                <span class="n">usbMsgPtr</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">idle_rate</span><span class="p">;</span> <span class="c1">// send data starting from this byte</span>
+                <span class="k">return</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// send 1 byte</span>
+                <span class="k">case</span> <span class="nl">USBRQ_HID_SET_IDLE</span><span class="p">:</span>
+                <span class="n">idle_rate</span> <span class="o">=</span> <span class="n">rq</span><span class="o">-&gt;</span><span class="n">wValue</span><span class="p">.</span><span class="n">bytes</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span> <span class="c1">// read in idle rate</span>
+                <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// send nothing</span>
+                <span class="k">case</span> <span class="nl">USBRQ_HID_GET_PROTOCOL</span><span class="p">:</span>
+                <span class="n">usbMsgPtr</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">protocol_version</span><span class="p">;</span> <span class="c1">// send data starting from this byte</span>
+                <span class="k">return</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// send 1 byte</span>
+                <span class="k">case</span> <span class="nl">USBRQ_HID_SET_PROTOCOL</span><span class="p">:</span>
+                <span class="n">protocol_version</span> <span class="o">=</span> <span class="n">rq</span><span class="o">-&gt;</span><span class="n">wValue</span><span class="p">.</span><span class="n">bytes</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+                <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// send nothing</span>
+                <span class="k">case</span> <span class="nl">USBRQ_HID_GET_REPORT</span><span class="p">:</span>
+                <span class="n">usbMsgPtr</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">keyboard_report</span><span class="p">;</span> <span class="c1">// send the report data</span>
+                <span class="k">return</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">keyboard_report</span><span class="p">);</span>
+                <span class="k">case</span> <span class="nl">USBRQ_HID_SET_REPORT</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">rq</span><span class="o">-&gt;</span><span class="n">wLength</span><span class="p">.</span><span class="n">word</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="c1">// check data is available</span>
+                <span class="p">{</span>
+                        <span class="c1">// 1 byte, we don&#39;t check report type (it can only be output or feature)</span>
+                        <span class="c1">// we never implemented &quot;feature&quot; reports so it can&#39;t be feature</span>
+                        <span class="c1">// so assume &quot;output&quot; reports</span>
+                        <span class="c1">// this means set LED status</span>
+                        <span class="c1">// since it&#39;s the only one in the descriptor</span>
+                        <span class="k">return</span> <span class="n">USB_NO_MSG</span><span class="p">;</span> <span class="c1">// send nothing but call usbFunctionWrite</span>
+                <span class="p">}</span>
+                <span class="k">else</span> <span class="c1">// no data or do not understand data, ignore</span>
+                <span class="p">{</span>
+                        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// send nothing</span>
+                <span class="p">}</span>
+                <span class="k">default</span><span class="o">:</span> <span class="c1">// do not understand data, ignore</span>
+                <span class="k">return</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// send nothing</span>
+        <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">usbMsgLen_t</span> <span class="nf">usbFunctionWrite</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="o">*</span> <span class="n">data</span><span class="p">,</span> <span class="n">uchar</span> <span class="n">len</span><span class="p">)</span>
+<span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">LED_state</span><span class="p">)</span>
+        <span class="p">{</span>
+                <span class="c1">// increment count when LED has toggled</span>
+                <span class="n">blink_count</span> <span class="o">=</span> <span class="n">blink_count</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="o">?</span> <span class="n">blink_count</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">:</span> <span class="n">blink_count</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="n">LED_state</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+
+        <span class="k">return</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// 1 byte read</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="oscillator-calibration">
+<h2>Oscillator Calibration<a class="headerlink" href="#oscillator-calibration" title="Permalink to this headline">¶</a></h2>
+<p>Calibrating the Attiny85’s integrated Oscillator to 8.25 MHz:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="c1">// section copied from EasyLogger</span>
+<span class="cm">/* Calibrate the RC oscillator to 8.25 MHz. The core clock of 16.5 MHz is</span>
+<span class="cm"> * derived from the 66 MHz peripheral clock by dividing. Our timing reference</span>
+<span class="cm"> * is the Start Of Frame signal (a single SE0 bit) available immediately after</span>
+<span class="cm"> * a USB RESET. We first do a binary search for the OSCCAL value and then</span>
+<span class="cm"> * optimize this value with a neighboorhod search.</span>
+<span class="cm"> * This algorithm may also be used to calibrate the RC oscillator directly to</span>
+<span class="cm"> * 12 MHz (no PLL involved, can therefore be used on almost ALL AVRs), but this</span>
+<span class="cm"> * is wide outside the spec for the OSCCAL value and the required precision for</span>
+<span class="cm"> * the 12 MHz clock! Use the RC oscillator calibrated to 12 MHz for</span>
+<span class="cm"> * experimental purposes only!</span>
+<span class="cm"> */</span>
+<span class="k">static</span> <span class="kt">void</span> <span class="nf">calibrateOscillator</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+        <span class="n">uchar</span>       <span class="n">step</span> <span class="o">=</span> <span class="mi">128</span><span class="p">;</span>
+        <span class="n">uchar</span>       <span class="n">trialValue</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">optimumValue</span><span class="p">;</span>
+        <span class="kt">int</span>         <span class="n">x</span><span class="p">,</span> <span class="n">optimumDev</span><span class="p">,</span> <span class="n">targetValue</span> <span class="o">=</span> <span class="p">(</span><span class="kt">unsigned</span><span class="p">)(</span><span class="mi">1499</span> <span class="o">*</span> <span class="p">(</span><span class="kt">double</span><span class="p">)</span><span class="n">F_CPU</span> <span class="o">/</span> <span class="mf">10.5e6</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">);</span>
+
+    <span class="cm">/* do a binary search: */</span>
+    <span class="k">do</span><span class="p">{</span>
+        <span class="n">OSCCAL</span> <span class="o">=</span> <span class="n">trialValue</span> <span class="o">+</span> <span class="n">step</span><span class="p">;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">usbMeasureFrameLength</span><span class="p">();</span>    <span class="cm">/* proportional to current real frequency */</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="n">targetValue</span><span class="p">)</span>             <span class="cm">/* frequency still too low */</span>
+            <span class="n">trialValue</span> <span class="o">+=</span> <span class="n">step</span><span class="p">;</span>
+        <span class="n">step</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span><span class="k">while</span><span class="p">(</span><span class="n">step</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="cm">/* We have a precision of +/- 1 for optimum OSCCAL here */</span>
+    <span class="cm">/* now do a neighborhood search for optimum value */</span>
+    <span class="n">optimumValue</span> <span class="o">=</span> <span class="n">trialValue</span><span class="p">;</span>
+    <span class="n">optimumDev</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span> <span class="cm">/* this is certainly far away from optimum */</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">OSCCAL</span> <span class="o">=</span> <span class="n">trialValue</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="n">OSCCAL</span> <span class="o">&lt;=</span> <span class="n">trialValue</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span> <span class="n">OSCCAL</span><span class="o">++</span><span class="p">){</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">usbMeasureFrameLength</span><span class="p">()</span> <span class="o">-</span> <span class="n">targetValue</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="o">-</span><span class="n">x</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="n">optimumDev</span><span class="p">){</span>
+            <span class="n">optimumDev</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+            <span class="n">optimumValue</span> <span class="o">=</span> <span class="n">OSCCAL</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">OSCCAL</span> <span class="o">=</span> <span class="n">optimumValue</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="cm">/*</span>
+<span class="cm">Note: This calibration algorithm may try OSCCAL values of up to 192 even if</span>
+<span class="cm">the optimum value is far below 192. It may therefore exceed the allowed clock</span>
+<span class="cm">frequency of the CPU in low voltage designs!</span>
+<span class="cm">You may replace this search algorithm with any other algorithm you like if</span>
+<span class="cm">you have additional constraints such as a maximum CPU clock.</span>
+<span class="cm">For version 5.x RC oscillators (those with a split range of 2x128 steps, e.g.</span>
+<span class="cm">ATTiny25, ATTiny45, ATTiny85), it may be useful to search for the optimum in</span>
+<span class="cm">both regions.</span>
+<span class="cm">*/</span>
+
+<span class="kt">void</span> <span class="nf">usbEventResetReady</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+        <span class="n">calibrateOscillator</span><span class="p">();</span>
+        <span class="n">eeprom_update_byte</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">OSCCAL</span><span class="p">);</span>   <span class="cm">/* store the calibrated value in EEPROM */</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="ascii-to-keycode">
+<h2>ASCII to Keycode<a class="headerlink" href="#ascii-to-keycode" title="Permalink to this headline">¶</a></h2>
+<p>To get appropriate keycodes we can send to the computer, each ASCII character needs to be converted:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="c1">// translates ASCII to appropriate keyboard report, taking into consideration the status of caps lock</span>
+<span class="kt">void</span> <span class="nf">ASCII_to_keycode</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="n">ascii</span><span class="p">)</span>
+<span class="p">{</span>
+        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x00</span><span class="p">;</span>
+        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="mh">0x00</span><span class="p">;</span>
+
+        <span class="c1">// see scancode.doc appendix C</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">ascii</span> <span class="o">&gt;=</span> <span class="sc">&#39;A&#39;</span> <span class="o">&amp;&amp;</span> <span class="n">ascii</span> <span class="o">&lt;=</span> <span class="sc">&#39;Z&#39;</span><span class="p">)</span>
+        <span class="p">{</span>
+                <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">+</span> <span class="n">ascii</span> <span class="o">-</span> <span class="sc">&#39;A&#39;</span><span class="p">;</span> <span class="c1">// set letter</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">bit_is_set</span><span class="p">(</span><span class="n">LED_state</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="c1">// if caps is on</span>
+                <span class="p">{</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="mh">0x00</span><span class="p">;</span> <span class="c1">// no shift</span>
+                <span class="p">}</span>
+                <span class="k">else</span>
+                <span class="p">{</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift // hold shift</span>
+                <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">ascii</span> <span class="o">&gt;=</span> <span class="sc">&#39;a&#39;</span> <span class="o">&amp;&amp;</span> <span class="n">ascii</span> <span class="o">&lt;=</span> <span class="sc">&#39;z&#39;</span><span class="p">)</span>
+        <span class="p">{</span>
+                <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">+</span> <span class="n">ascii</span> <span class="o">-</span> <span class="sc">&#39;a&#39;</span><span class="p">;</span> <span class="c1">// set letter</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">bit_is_set</span><span class="p">(</span><span class="n">LED_state</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="c1">// if caps is on</span>
+                <span class="p">{</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift // hold shift</span>
+                <span class="p">}</span>
+                <span class="k">else</span>
+                <span class="p">{</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="mh">0x00</span><span class="p">;</span> <span class="c1">// no shift</span>
+                <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">ascii</span> <span class="o">&gt;=</span> <span class="sc">&#39;0&#39;</span> <span class="o">&amp;&amp;</span> <span class="n">ascii</span> <span class="o">&lt;=</span> <span class="sc">&#39;9&#39;</span><span class="p">)</span>
+        <span class="p">{</span>
+                <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="mh">0x00</span><span class="p">;</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">ascii</span> <span class="o">==</span> <span class="sc">&#39;0&#39;</span><span class="p">)</span>
+                <span class="p">{</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x27</span><span class="p">;</span>
+                <span class="p">}</span>
+                <span class="k">else</span>
+                <span class="p">{</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">30</span> <span class="o">+</span> <span class="n">ascii</span> <span class="o">-</span> <span class="sc">&#39;1&#39;</span><span class="p">;</span>
+                <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">else</span>
+        <span class="p">{</span>
+                <span class="k">switch</span> <span class="p">(</span><span class="n">ascii</span><span class="p">)</span> <span class="c1">// convert ascii to keycode according to documentation</span>
+                <span class="p">{</span>
+                        <span class="k">case</span> <span class="sc">&#39;!&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">29</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;@&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">29</span> <span class="o">+</span> <span class="mi">2</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;#&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">29</span> <span class="o">+</span> <span class="mi">3</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;$&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">29</span> <span class="o">+</span> <span class="mi">4</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;%&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">29</span> <span class="o">+</span> <span class="mi">5</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;^&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">29</span> <span class="o">+</span> <span class="mi">6</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;&amp;&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">29</span> <span class="o">+</span> <span class="mi">7</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;*&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">29</span> <span class="o">+</span> <span class="mi">8</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;(&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">29</span> <span class="o">+</span> <span class="mi">9</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;)&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x27</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;~&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="c1">// fall through</span>
+                        <span class="k">case</span> <span class="sc">&#39;`&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x35</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;_&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="c1">// fall through</span>
+                        <span class="k">case</span> <span class="sc">&#39;-&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x2D</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;+&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="c1">// fall through</span>
+                        <span class="k">case</span> <span class="sc">&#39;=&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x2E</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;{&#39;</span><span class="o">:</span>
+                                <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                                <span class="c1">// fall through</span>
+                                <span class="k">case</span> <span class="sc">&#39;[&#39;</span><span class="o">:</span>
+                                <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x2F</span><span class="p">;</span>
+                                <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;}&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="c1">// fall through</span>
+                        <span class="k">case</span> <span class="sc">&#39;]&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x30</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;|&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="c1">// fall through</span>
+                        <span class="k">case</span> <span class="sc">&#39;\\&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x31</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;:&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="c1">// fall through</span>
+                        <span class="k">case</span> <span class="sc">&#39;;&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x33</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;&quot;&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="c1">// fall through</span>
+                        <span class="k">case</span> <span class="sc">&#39;\&#39;&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x34</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;&lt;&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="c1">// fall through</span>
+                        <span class="k">case</span> <span class="sc">&#39;,&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x36</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;&gt;&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="c1">// fall through</span>
+                        <span class="k">case</span> <span class="sc">&#39;.&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x37</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;?&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">modifier</span> <span class="o">=</span> <span class="n">_BV</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="c1">// hold shift</span>
+                        <span class="c1">// fall through</span>
+                        <span class="k">case</span> <span class="sc">&#39;/&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x38</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39; &#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x2C</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;\t&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x2B</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                        <span class="k">case</span> <span class="sc">&#39;\n&#39;</span><span class="o">:</span>
+                        <span class="n">keyboard_report</span><span class="p">.</span><span class="n">keycode</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mh">0x28</span><span class="p">;</span>
+                        <span class="k">break</span><span class="p">;</span>
+                <span class="p">}</span>
+        <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="background-tasks">
+<h2>Background tasks<a class="headerlink" href="#background-tasks" title="Permalink to this headline">¶</a></h2>
+<p>Performing obligatory background tasks:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">send_report_once</span><span class="p">()</span>
+<span class="p">{</span>
+        <span class="c1">// perform usb background tasks until the report can be sent, then send it</span>
+        <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">{</span>
+                <span class="n">usbPoll</span><span class="p">();</span> <span class="c1">// this needs to be called at least once every 10 ms</span>
+
+
+                <span class="k">if</span> <span class="p">(</span><span class="n">usbInterruptIsReady</span><span class="p">())</span>
+                <span class="p">{</span>
+                        <span class="n">usbSetInterrupt</span><span class="p">(</span><span class="o">&amp;</span><span class="n">keyboard_report</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">keyboard_report</span><span class="p">));</span> <span class="c1">// send</span>
+
+                        <span class="k">break</span><span class="p">;</span>
+
+                        <span class="c1">// see http://vusb.wikidot.com/driver-api</span>
+                <span class="p">}</span>
+        <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// stdio&#39;s stream will use this funct to type out characters in a string</span>
+<span class="kt">void</span> <span class="nf">type_out_char</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="n">ascii</span><span class="p">,</span> <span class="kt">FILE</span> <span class="o">*</span><span class="n">stream</span><span class="p">)</span>
+<span class="p">{</span>
+        <span class="n">ASCII_to_keycode</span><span class="p">(</span><span class="n">ascii</span><span class="p">);</span>
+        <span class="n">send_report_once</span><span class="p">();</span>
+        <span class="n">keyboard_report_reset</span><span class="p">();</span> <span class="c1">// release keys</span>
+        <span class="n">send_report_once</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="k">static</span> <span class="kt">FILE</span> <span class="n">mystdout</span> <span class="o">=</span> <span class="n">FDEV_SETUP_STREAM</span><span class="p">(</span><span class="n">type_out_char</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">_FDEV_SETUP_WRITE</span><span class="p">);</span> <span class="c1">// setup writing stream</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="variables">
+<h2>Variables<a class="headerlink" href="#variables" title="Permalink to this headline">¶</a></h2>
+<p>The user can edit the following variables to adjust kbdwtchdg:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="c1">//USER VARIABLES</span>
+<span class="c1">//You can change these settings to your liking:</span>
+
+<span class="cp">#define DELAY 18000 </span><span class="c1">//time (in 1/100 seconds) to wait after pressing capslock before writing string</span>
+                                        <span class="c1">//max: ~ 5.8*10^9 years</span>
+
+<span class="cp">#define INITIAL_DELAY 3000  </span><span class="c1">//Delay after power before writing string</span>
+                                                        <span class="c1">//max: ~ 5.8*10^9 years</span>
+
+<span class="cp">#define THRESHOLD 3 </span><span class="c1">//pressing capslock more than 3 times triggers the counter</span>
+
+<span class="cp">#define TEXT PSTR(&quot;Hello World! This is a text!\n&quot;) </span><span class="c1">//Text to be written by kbdwtchdg</span>
+
+<span class="cp">#define OUTPUT_BITS 0b00011001 </span><span class="c1">//Define PB3 as green output, PB4 as red output and PB0 as yellow output</span>
+<span class="c1">//End of USER VARIABLES</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="timer-setup">
+<h2>Timer setup<a class="headerlink" href="#timer-setup" title="Permalink to this headline">¶</a></h2>
+<p>To perform our delays without using <code class="docutils literal"><span class="pre">_delay_ms</span></code> (which would prevent our ATtiny85 from responding to the computer).
+We use interrupts which are caused by timer0 in CTC mode:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">volatile</span> <span class="kt">uint64_t</span> <span class="n">timer_count</span><span class="p">;</span>
+<span class="k">volatile</span> <span class="kt">uint8_t</span> <span class="n">first_start</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">setup_timer</span><span class="p">()</span>
+<span class="p">{</span>
+        <span class="n">DDRB</span> <span class="o">=</span> <span class="n">OUTPUT_BITS</span><span class="p">;</span> <span class="c1">//Setting the output bits</span>
+
+        <span class="n">TCCR0A</span> <span class="o">|=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">WGM01</span><span class="p">);</span> <span class="c1">//Configure timer0 to CTC mode</span>
+
+        <span class="n">TIMSK</span> <span class="o">|=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">OCIE0A</span><span class="p">);</span> <span class="c1">//Enable CTC interrupt</span>
+
+        <span class="n">OCR0A</span> <span class="o">=</span> <span class="n">F_CPU</span><span class="o">/</span><span class="mi">1024</span> <span class="o">*</span> <span class="mf">0.01</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">//Get the value to compare our timer with</span>
+
+        <span class="n">TCCR0B</span> <span class="o">|=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">CS02</span><span class="p">)</span><span class="o">|</span><span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">CS00</span><span class="p">);</span> <span class="c1">//1024 Prescaler</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>For more information see: <a class="reference external" href="http://www.atmel.com/images/atmel-2586-avr-8-bit-microcontroller-attiny25-attiny45-attiny85_datasheet.pdf">http://www.atmel.com/images/atmel-2586-avr-8-bit-microcontroller-attiny25-attiny45-attiny85_datasheet.pdf</a></p>
+</div>
+<div class="section" id="activating-an-led">
+<h2>Activating an LED<a class="headerlink" href="#activating-an-led" title="Permalink to this headline">¶</a></h2>
+<p>Defining a function to turn on a specific LED (and turn off the other LEDs):</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">void</span> <span class="nf">activate_led</span><span class="p">(</span><span class="kt">uint8_t</span> <span class="n">led</span><span class="p">)</span>
+<span class="p">{</span>
+        <span class="c1">//turn all LEDs off</span>
+        <span class="n">PORTB</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="p">(</span><span class="n">LED_YELLOW</span> <span class="o">|</span> <span class="n">LED_RED</span> <span class="o">|</span> <span class="n">LED_GREEN</span><span class="p">);</span>
+
+        <span class="c1">//turn on specific LED</span>
+        <span class="n">PORTB</span> <span class="o">|=</span> <span class="p">(</span><span class="n">led</span><span class="p">);</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="main-function">
+<h2>main() function<a class="headerlink" href="#main-function" title="Permalink to this headline">¶</a></h2>
+<p>The foundation of our program has been built, now we need to construct our <code class="docutils literal"><span class="pre">main()</span></code> function upon it:</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+        <span class="kt">uint8_t</span> <span class="n">calibrationValue</span> <span class="o">=</span> <span class="n">eeprom_read_byte</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span> <span class="cm">/* calibration value from last time */</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">calibrationValue</span> <span class="o">!=</span> <span class="mh">0xFF</span><span class="p">)</span>
+        <span class="p">{</span>
+                <span class="n">OSCCAL</span> <span class="o">=</span> <span class="n">calibrationValue</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="n">setup_timer</span><span class="p">();</span>
+
+        <span class="n">sei</span><span class="p">();</span> <span class="c1">//enable global interrupt</span>
+
+        <span class="n">stdout</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">mystdout</span><span class="p">;</span> <span class="c1">// set default stream</span>
+
+        <span class="c1">// initialize report (I never assume it&#39;s initialized to 0 automatically)</span>
+        <span class="n">keyboard_report_reset</span><span class="p">();</span>
+
+        <span class="n">wdt_disable</span><span class="p">();</span> <span class="c1">// disable watchdog, good habit if you don&#39;t use it</span>
+
+        <span class="c1">// enforce USB re-enumeration by pretending to disconnect and reconnect</span>
+        <span class="n">usbDeviceDisconnect</span><span class="p">();</span>
+        <span class="n">_delay_ms</span><span class="p">(</span><span class="mi">250</span><span class="p">);</span>
+        <span class="n">usbDeviceConnect</span><span class="p">();</span>
+
+        <span class="c1">// initialize various modules</span>
+        <span class="n">usbInit</span><span class="p">();</span>
+
+        <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="c1">// main loop, do forever</span>
+        <span class="p">{</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">first_start</span> <span class="o">||</span> <span class="p">(</span><span class="n">blink_count</span> <span class="o">&gt;</span> <span class="n">THRESHOLD</span><span class="p">))</span> <span class="c1">// activated by blinking lights or first start</span>
+                <span class="p">{</span>
+                        <span class="n">activate_led</span><span class="p">(</span><span class="n">LED_YELLOW</span><span class="p">);</span> <span class="c1">//Turn on Yellow LED to indicate waiting status</span>
+
+                        <span class="k">if</span> <span class="p">((</span><span class="n">first_start</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">timer_count</span> <span class="o">==</span> <span class="n">INITIAL_DELAY</span><span class="p">))</span> <span class="o">||</span> <span class="c1">//initial delay at first start</span>
+                                <span class="p">(</span><span class="o">!</span><span class="n">first_start</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">timer_count</span> <span class="o">==</span> <span class="n">DELAY</span><span class="p">)))</span> <span class="c1">//delay after capslock trigger</span>
+                        <span class="p">{</span>
+                                <span class="n">activate_led</span><span class="p">(</span><span class="n">LED_RED</span><span class="p">);</span> <span class="c1">//Turn red LED to represent working status</span>
+
+                                <span class="n">printf_P</span><span class="p">(</span><span class="n">TEXT</span><span class="p">);</span> <span class="c1">//Printing our TEXT</span>
+
+                                <span class="n">blink_count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// reset Capslock counter</span>
+                                <span class="n">first_start</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// no first start anymore</span>
+                                <span class="n">timer_count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="c1">// reset timer</span>
+                        <span class="p">}</span>
+                <span class="p">}</span>
+                <span class="k">else</span>
+                <span class="p">{</span>
+                        <span class="n">activate_led</span><span class="p">(</span><span class="n">LED_GREEN</span><span class="p">);</span> <span class="c1">// Turn on Green LED to indicate idle status</span>
+                <span class="p">}</span>
+
+                <span class="c1">// perform usb related background tasks</span>
+                <span class="n">usbPoll</span><span class="p">();</span> <span class="c1">// this needs to be called at least once every 10 ms</span>
+                <span class="c1">// this is also called in send_report_once</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="interrupt">
+<h2>Interrupt<a class="headerlink" href="#interrupt" title="Permalink to this headline">¶</a></h2>
+<p>The following function is called every  1/100 second by our interrupt timer.
+If kbdwtchdg has just been plugged in, the timer counts to our <code class="docutils literal"><span class="pre">INITIAL_DELAY</span></code>, every other call (if capslock has been pressed &gt; <code class="docutils literal"><span class="pre">THRESHOLD</span></code>) counts to the standard <code class="docutils literal"><span class="pre">DELAY</span></code></p>
+<p>The timer doesn’t start counting until it is triggered by first_start or capslock.
+If triggered by first_start the timer will stop counting when it reaches INITIAL_DELAY
+If triggered by capslock the timer will stop counting when it reaches DELAY
+The timer cannot count beyond those delay limits</p>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">ISR</span><span class="p">(</span><span class="n">TIM0_COMPA_vect</span><span class="p">)</span>
+<span class="p">{</span>
+        <span class="k">if</span> <span class="p">((</span><span class="n">first_start</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">timer_count</span> <span class="o">&lt;</span> <span class="n">INITIAL_DELAY</span><span class="p">))</span> <span class="o">||</span> <span class="c1">// initial delay at first start</span>
+                <span class="p">(</span><span class="o">!</span><span class="n">first_start</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">timer_count</span> <span class="o">&lt;</span> <span class="n">DELAY</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">blink_count</span> <span class="o">&gt;</span> <span class="n">THRESHOLD</span><span class="p">)))</span> <span class="c1">//delay after capslock trigger</span>
+        <span class="p">{</span>
+                <span class="n">timer_count</span><span class="o">++</span><span class="p">;</span>
+        <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="copyright">
+<h2>Copyright<a class="headerlink" href="#copyright" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-c"><div class="highlight"><pre><span></span><span class="cm">/*</span>
+<span class="cm"> This program is free software: you can redistribute it and/or modify</span>
+<span class="cm"> it under the terms of the GNU General Public License as published by</span>
+<span class="cm"> the Free Software Foundation, either version 3 of the License, or</span>
+<span class="cm"> (at your option) any later version.</span>
+
+<span class="cm"> This program is distributed in the hope that it will be useful,</span>
+<span class="cm"> but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="cm"> MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="cm"> GNU General Public License for more details.</span>
+
+<span class="cm"> You should have received a copy of the GNU General Public License</span>
+<span class="cm"> along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+
+<span class="cm">Copyright by Frank Zhao (http://www.frank-zhao.com), Philipp Rathmanner (https://github.com/Yarmek) and Christian Eitner (https://github.com/7enderhead)</span>
+<span class="cm"> */</span>
+
+<span class="c1">//The code of this project is based on Frank Zhao&#39;s USB businesscard(http://www.instructables.com/id/USB-PCB-Business-Card/)</span>
+<span class="c1">//and built based on Dovydas R.&#39;s circuit diagram for &quot;usb_pass_input_with_buttons&quot;(https://github.com/Dovydas-R/usb_pass_input_with_buttons).</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="changelog.html" class="btn btn-neutral float-right" title="Changelog" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="setup.html" class="btn btn-neutral" title="Project setup" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017, Frank Zhao, Philipp Rathmanner, Christian Eitner.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.9',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

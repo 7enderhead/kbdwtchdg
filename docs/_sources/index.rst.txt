@@ -1,0 +1,12 @@
+Welcome to kbdwtchdg's documentation!
+=====================================
+
+kbdwtchdg
+---------
+
+.. toctree::
+   :maxdepth: 1
+
+   setup
+   main
+   changelog
