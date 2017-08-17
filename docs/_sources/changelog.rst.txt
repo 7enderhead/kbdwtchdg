@@ -10,3 +10,9 @@ Changelog
 		 re-organizing folder structure
 		 
 		 adapting GPL
+
+
+    * 17.08.2017:
+		 added pictures and diagrams
+		 
+		 added documentation on http://yarmek.github.io/kbdwtchdg

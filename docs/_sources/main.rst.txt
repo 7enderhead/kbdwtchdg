@@ -25,7 +25,7 @@ The following libraries need to be included:
     #include "usbdrv/usbdrv.h"
     #include "usbdrv/usbconfig.h"
     
-    #define F_CPU 16500000L
+    #define F_CPU 16500000L //Defining a CPU Frequency of 16.5 MHz
     #include <util/delay.h>
 
 Defining the bits to set LED outputs:
@@ -39,9 +39,9 @@ Defining the bits to set LED outputs:
 
 The ATtiny85 Microcontroller needs some definitions to be recognized as a keyboard:
 
+
 ::
 
-    
     // USB HID report descriptor for boot protocol keyboard
     // see HID1_11.pdf appendix B section 1
     // USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH is defined in usbconfig
@@ -245,7 +245,6 @@ To get appropriate keycodes we can send to the computer, each ASCII character ne
 
 ::
 
-    
     // translates ASCII to appropriate keyboard report, taking into consideration the status of caps lock
     void ASCII_to_keycode(uint8_t ascii)
     {
@@ -422,7 +421,6 @@ Performing obligatory background tasks:
 
 ::
 
-    
     void send_report_once()
     {
             // perform usb background tasks until the report can be sent, then send it
@@ -463,7 +461,6 @@ The user can edit the following variables to adjust kbdwtchdg:
 
 ::
 
-    
     //USER VARIABLES
     //You can change these settings to your liking:
     
@@ -476,9 +473,9 @@ The user can edit the following variables to adjust kbdwtchdg:
     #define THRESHOLD 3 //pressing capslock more than 3 times triggers the counter
     
     #define TEXT PSTR("Hello World! This is a text!\n") //Text to be written by kbdwtchdg
+    //End of USER VARIABLES
     
     #define OUTPUT_BITS 0b00011001 //Define PB3 as green output, PB4 as red output and PB0 as yellow output
-    //End of USER VARIABLES
     
 
 ***********
@@ -486,11 +483,11 @@ Timer setup
 ***********
 
 To perform our delays without using ``_delay_ms`` (which would prevent our ATtiny85 from responding to the computer).
-We use interrupts which are caused by timer0 in CTC mode:
+We use interrupts which are caused by ``timer0`` in CTC mode:
+
 
 ::
 
-    
     volatile uint64_t timer_count; 
     volatile uint8_t first_start = 1;
     
@@ -509,7 +506,6 @@ We use interrupts which are caused by timer0 in CTC mode:
 
 For more information see: http://www.atmel.com/images/atmel-2586-avr-8-bit-microcontroller-attiny25-attiny45-attiny85_datasheet.pdf
 
-
 *****************
 Activating an LED
 *****************
@@ -519,7 +515,6 @@ Defining a function to turn on a specific LED (and turn off the other LEDs):
 
 ::
 
-    
     void activate_led(uint8_t led)
     {
             //turn all LEDs off
@@ -539,7 +534,6 @@ The foundation of our program has been built, now we need to construct our ``mai
 
 ::
 
-    
     int main()
     {
             uint8_t calibrationValue = eeprom_read_byte(0); /* calibration value from last time */
@@ -603,18 +597,17 @@ The foundation of our program has been built, now we need to construct our ``mai
 Interrupt
 *********
 
-The following function is called every  1/100 second by our interrupt timer. 
+The following function is called every  **1/100 second** by our interrupt timer. 
 If kbdwtchdg has just been plugged in, the timer counts to our ``INITIAL_DELAY``, every other call (if capslock has been pressed > ``THRESHOLD``) counts to the standard ``DELAY``
 
 The timer doesn't start counting until it is triggered by first_start or capslock. 
-If triggered by first_start the timer will stop counting when it reaches INITIAL_DELAY
-If triggered by capslock the timer will stop counting when it reaches DELAY
+If triggered by ``first_start`` the timer will stop counting when it reaches ``INITIAL_DELAY``.
+If triggered by capslock the timer will stop counting when it reaches ``DELAY``.
 The timer cannot count beyond those delay limits
 
 
 ::
 
-    
     ISR(TIM0_COMPA_vect)
     {
             if ((first_start && (timer_count < INITIAL_DELAY)) || // initial delay at first start
@@ -623,7 +616,6 @@ The timer cannot count beyond those delay limits
                     timer_count++;
             }
     }
-
 
 *********
 Copyright
@@ -652,5 +644,4 @@ Copyright
     //The code of this project is based on Frank Zhao's USB businesscard(http://www.instructables.com/id/USB-PCB-Business-Card/)
     //and built based on Dovydas R.'s circuit diagram for "usb_pass_input_with_buttons"(https://github.com/Dovydas-R/usb_pass_input_with_buttons).
     
-
 

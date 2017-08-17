@@ -49,7 +49,6 @@ Copyright by Frank Zhao (http://www.frank-zhao.com), Philipp Rathmanner (https:/
 //and built based on Dovydas R.'s circuit diagram for "usb_pass_input_with_buttons"(https://github.com/Dovydas-R/usb_pass_input_with_buttons).
 
 //@edoc
-
 //@(copyright)
 
 //@start(definitions)
@@ -69,7 +68,7 @@ Copyright by Frank Zhao (http://www.frank-zhao.com), Philipp Rathmanner (https:/
 #include "usbdrv/usbdrv.h"
 #include "usbdrv/usbconfig.h"
 
-#define F_CPU 16500000L
+#define F_CPU 16500000L //Defining a CPU Frequency of 16.5 MHz
 #include <util/delay.h>
 //@edoc
 
@@ -82,8 +81,8 @@ Copyright by Frank Zhao (http://www.frank-zhao.com), Philipp Rathmanner (https:/
 //@edoc
 
 //The ATtiny85 Microcontroller needs some definitions to be recognized as a keyboard:
-//@code
 
+//@code
 // USB HID report descriptor for boot protocol keyboard
 // see HID1_11.pdf appendix B section 1
 // USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH is defined in usbconfig
@@ -289,7 +288,6 @@ void usbEventResetReady(void)
 //To get appropriate keycodes we can send to the computer, each ASCII character needs to be converted:
 
 //@code
-
 // translates ASCII to appropriate keyboard report, taking into consideration the status of caps lock
 void ASCII_to_keycode(uint8_t ascii)
 {
@@ -467,7 +465,6 @@ void ASCII_to_keycode(uint8_t ascii)
 //Performing obligatory background tasks:
 
 //@code
-
 void send_report_once()
 {
 	// perform usb background tasks until the report can be sent, then send it
@@ -509,7 +506,6 @@ static FILE mystdout = FDEV_SETUP_STREAM(type_out_char, NULL, _FDEV_SETUP_WRITE)
 //The user can edit the following variables to adjust kbdwtchdg:
 
 //@code
-
 //USER VARIABLES
 //You can change these settings to your liking:
 
@@ -522,9 +518,9 @@ static FILE mystdout = FDEV_SETUP_STREAM(type_out_char, NULL, _FDEV_SETUP_WRITE)
 #define THRESHOLD 3 //pressing capslock more than 3 times triggers the counter
 
 #define TEXT PSTR("Hello World! This is a text!\n") //Text to be written by kbdwtchdg
+//End of USER VARIABLES
 
 #define OUTPUT_BITS 0b00011001 //Define PB3 as green output, PB4 as red output and PB0 as yellow output
-//End of USER VARIABLES
 
 //@edoc
 //@(variables)
@@ -535,9 +531,9 @@ static FILE mystdout = FDEV_SETUP_STREAM(type_out_char, NULL, _FDEV_SETUP_WRITE)
 //***********
 
 //To perform our delays without using ``_delay_ms`` (which would prevent our ATtiny85 from responding to the computer).
-//We use interrupts which are caused by timer0 in CTC mode:
-//@code
+//We use interrupts which are caused by ``timer0`` in CTC mode:
 
+//@code
 volatile uint64_t timer_count; 
 volatile uint8_t first_start = 1;
 
@@ -556,7 +552,6 @@ void setup_timer()
 //@edoc
 
 //For more information see: http://www.atmel.com/images/atmel-2586-avr-8-bit-microcontroller-attiny25-attiny45-attiny85_datasheet.pdf
-
 //@(timer)
 
 //@start(activateLED)
@@ -567,7 +562,6 @@ void setup_timer()
 //Defining a function to turn on a specific LED (and turn off the other LEDs):
 
 //@code
-
 void activate_led(uint8_t led)
 {
 	//turn all LEDs off
@@ -588,7 +582,6 @@ void activate_led(uint8_t led)
 //The foundation of our program has been built, now we need to construct our ``main()`` function upon it:
 
 //@code
-
 int main()
 {
 	uint8_t calibrationValue = eeprom_read_byte(0); /* calibration value from last time */
@@ -655,16 +648,15 @@ int main()
 //Interrupt
 //*********
 
-//The following function is called every  1/100 second by our interrupt timer. 
+//The following function is called every  **1/100 second** by our interrupt timer. 
 //If kbdwtchdg has just been plugged in, the timer counts to our ``INITIAL_DELAY``, every other call (if capslock has been pressed > ``THRESHOLD``) counts to the standard ``DELAY``
 
 //The timer doesn't start counting until it is triggered by first_start or capslock. 
-//If triggered by first_start the timer will stop counting when it reaches INITIAL_DELAY
-//If triggered by capslock the timer will stop counting when it reaches DELAY
+//If triggered by ``first_start`` the timer will stop counting when it reaches ``INITIAL_DELAY``.
+//If triggered by capslock the timer will stop counting when it reaches ``DELAY``.
 //The timer cannot count beyond those delay limits
 
 //@code
-
 ISR(TIM0_COMPA_vect)
 {
 	if ((first_start && (timer_count < INITIAL_DELAY)) || // initial delay at first start
@@ -674,7 +666,6 @@ ISR(TIM0_COMPA_vect)
 	}
 }
 //@edoc
-
 //@(interrupt)
 
 //@

@@ -185,7 +185,7 @@
 <span class="cp">#include</span> <span class="cpf">&quot;usbdrv/usbdrv.h&quot;</span><span class="cp"></span>
 <span class="cp">#include</span> <span class="cpf">&quot;usbdrv/usbconfig.h&quot;</span><span class="cp"></span>
 
-<span class="cp">#define F_CPU 16500000L</span>
+<span class="cp">#define F_CPU 16500000L </span><span class="c1">//Defining a CPU Frequency of 16.5 MHz</span>
 <span class="cp">#include</span> <span class="cpf">&lt;util/delay.h&gt;</span><span class="cp"></span>
 </pre></div>
 </div>
@@ -603,16 +603,16 @@
 <span class="cp">#define THRESHOLD 3 </span><span class="c1">//pressing capslock more than 3 times triggers the counter</span>
 
 <span class="cp">#define TEXT PSTR(&quot;Hello World! This is a text!\n&quot;) </span><span class="c1">//Text to be written by kbdwtchdg</span>
+<span class="c1">//End of USER VARIABLES</span>
 
 <span class="cp">#define OUTPUT_BITS 0b00011001 </span><span class="c1">//Define PB3 as green output, PB4 as red output and PB0 as yellow output</span>
-<span class="c1">//End of USER VARIABLES</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="timer-setup">
 <h2>Timer setup<a class="headerlink" href="#timer-setup" title="Permalink to this headline">¶</a></h2>
 <p>To perform our delays without using <code class="docutils literal"><span class="pre">_delay_ms</span></code> (which would prevent our ATtiny85 from responding to the computer).
-We use interrupts which are caused by timer0 in CTC mode:</p>
+We use interrupts which are caused by <code class="docutils literal"><span class="pre">timer0</span></code> in CTC mode:</p>
 <div class="highlight-c"><div class="highlight"><pre><span></span><span class="k">volatile</span> <span class="kt">uint64_t</span> <span class="n">timer_count</span><span class="p">;</span>
 <span class="k">volatile</span> <span class="kt">uint8_t</span> <span class="n">first_start</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 
@@ -713,11 +713,11 @@ We use interrupts which are caused by timer0 in CTC mode:</p>
 </div>
 <div class="section" id="interrupt">
 <h2>Interrupt<a class="headerlink" href="#interrupt" title="Permalink to this headline">¶</a></h2>
-<p>The following function is called every  1/100 second by our interrupt timer.
+<p>The following function is called every  <strong>1/100 second</strong> by our interrupt timer.
 If kbdwtchdg has just been plugged in, the timer counts to our <code class="docutils literal"><span class="pre">INITIAL_DELAY</span></code>, every other call (if capslock has been pressed &gt; <code class="docutils literal"><span class="pre">THRESHOLD</span></code>) counts to the standard <code class="docutils literal"><span class="pre">DELAY</span></code></p>
 <p>The timer doesn’t start counting until it is triggered by first_start or capslock.
-If triggered by first_start the timer will stop counting when it reaches INITIAL_DELAY
-If triggered by capslock the timer will stop counting when it reaches DELAY
+If triggered by <code class="docutils literal"><span class="pre">first_start</span></code> the timer will stop counting when it reaches <code class="docutils literal"><span class="pre">INITIAL_DELAY</span></code>.
+If triggered by capslock the timer will stop counting when it reaches <code class="docutils literal"><span class="pre">DELAY</span></code>.
 The timer cannot count beyond those delay limits</p>
 <div class="highlight-c"><div class="highlight"><pre><span></span><span class="n">ISR</span><span class="p">(</span><span class="n">TIM0_COMPA_vect</span><span class="p">)</span>
 <span class="p">{</span>
