@@ -10,16 +10,18 @@
 //Source code
 //###########
 
-//@include(definitions)
-//@include(usbFunctions)
-//@include(Oscillator)
-//@include(ASCII)
-//@include(background)
+//@include(mainUSB)
 //@include(variables)
 //@include(timer)
-//@include(activateLED)
-//@include(mainUSB)
 //@include(interrupt)
+//@include(CapsCounter)
+//@include(activateLED)
+//@include(ASCII)
+//@include(HidReport)
+//@include(usbFunction)
+//@include(Oscillator)
+//@include(background)
+//@include(definitions)
 //@include(copyright)
 
 //@start(copyright)
@@ -45,7 +47,7 @@
 Copyright by Frank Zhao (http://www.frank-zhao.com), Philipp Rathmanner (https://github.com/Yarmek) and Christian Eitner (https://github.com/7enderhead)
  */
  
-//The code of this project is based on Frank Zhao's USB businesscard(http://www.instructables.com/id/USB-PCB-Business-Card/)
+//The code of this project is based on Frank Zhao's USB business card(http://www.instructables.com/id/USB-PCB-Business-Card/)
 //and built based on Dovydas R.'s circuit diagram for "usb_pass_input_with_buttons"(https://github.com/Dovydas-R/usb_pass_input_with_buttons).
 
 //@edoc
@@ -71,16 +73,18 @@ Copyright by Frank Zhao (http://www.frank-zhao.com), Philipp Rathmanner (https:/
 #define F_CPU 16500000L //Defining a CPU Frequency of 16.5 MHz
 #include <util/delay.h>
 //@edoc
+//@(definitions)
 
-//Defining the bits to set LED outputs:
+//@start(HidReport)
+//*********************
+//HID Report Descriptor
+//*********************
 
-//@code
-#define LED_RED (1 << PB4) //Turn on red led
-#define LED_GREEN (1 << PB3) //Turn on green led
-#define LED_YELLOW (1 << PB0) //Turn on yellow led
-//@edoc
-
-//The ATtiny85 Microcontroller needs some definitions to be recognized as a keyboard:
+//The ATtiny85 Microcontroller needs some definitions to be recognized as a HID (Human Interface Device), or 
+//keyboard. Those definitions are stored inside the ``usbHidReportDescriptor``. The descriptor defines
+//which kind of device your ATtiny85 pretends to be and which keys are available. It gives the user
+//the ability to define many different aspects of a HID. More information 
+//on HIDs: `USB.org <http://www.usb.org/developers/hidpage/>`_
 
 //@code
 // USB HID report descriptor for boot protocol keyboard
@@ -138,14 +142,14 @@ static uint8_t protocol_version = 0; // see HID1_11.pdf sect 7.2.6
 static uint8_t LED_state = 0; // see HID1_11.pdf appendix B section 1
 static uint8_t blink_count = 0; // keep track of how many times caps lock have toggled
 //@edoc
-//@(definitions)
+//@(HidReport)
 
-//@start(usbFunctions)
-//*************
-//USB Functions
-//*************
+//@start(usbFunction)
+//******************
+//USB Setup Function
+//******************
 
-//The following functions are called to communicate with the computer:
+//The following function is called to receive reports and process them.
 
 //@code
 // see http://vusb.wikidot.com/driver-api
@@ -194,7 +198,18 @@ usbMsgLen_t usbFunctionSetup(uint8_t data[8])
 		return 0; // send nothing
 	}
 }
+//@edoc
+//@(usbFunction)
 
+//@start(CapsCounter)
+//****************
+//Capslock counter
+//****************
+
+//When an output report is received (in our case the LED status of capslock is the only possible output report)
+//the ``blink_count`` of capslock is being raised.
+
+//@code
 usbMsgLen_t usbFunctionWrite(uint8_t * data, uchar len)
 {
 	if (data[0] != LED_state)
@@ -215,7 +230,7 @@ usbMsgLen_t usbFunctionWrite(uint8_t * data, uchar len)
 //Oscillator Calibration
 //**********************
 
-//Calibrating the Attiny85's integrated Oscillator to 8.25 MHz:
+//Calibrating Attiny85's integrated Oscillator to 8.25 MHz:
 
 //@code
 // section copied from EasyLogger
@@ -285,7 +300,8 @@ void usbEventResetReady(void)
 //ASCII to Keycode
 //****************
 
-//To get appropriate keycodes we can send to the computer, each ASCII character needs to be converted:
+//To get appropriate keycodes we can send to the computer, each ASCII character needs to be converted
+//to its corresponding keycode:
 
 //@code
 // translates ASCII to appropriate keyboard report, taking into consideration the status of caps lock
@@ -507,30 +523,36 @@ static FILE mystdout = FDEV_SETUP_STREAM(type_out_char, NULL, _FDEV_SETUP_WRITE)
 
 //@code
 //USER VARIABLES
-//You can change these settings to your liking:
 
 #define DELAY 18000 //time (in 1/100 seconds) to wait after pressing capslock before writing string
 					//max: ~ 5.8*10^9 years
 
 #define INITIAL_DELAY 3000  //Delay after power before writing string
-							//max: ~ 5.8*10^9 years
+					//max: ~ 5.8*10^9 years
 
 #define THRESHOLD 3 //pressing capslock more than 3 times triggers the counter
 
 #define TEXT PSTR("Hello World! This is a text!\n") //Text to be written by kbdwtchdg
+
+//Defining the bits to set LED outputs:
+
+#define LED_RED (1 << PB4) //Turn on red led
+#define LED_GREEN (1 << PB3) //Turn on green led
+#define LED_YELLOW (1 << PB0) //Turn on yellow led
+
 //End of USER VARIABLES
-
-#define OUTPUT_BITS 0b00011001 //Define PB3 as green output, PB4 as red output and PB0 as yellow output
-
 //@edoc
 //@(variables)
+
+#define OUTPUT_BITS 0b00011001 //Define PB3 as green output, PB4 as red output and PB0 as yellow output
 
 //@start(timer)
 //***********
 //Timer setup
 //***********
 
-//To perform our delays without using ``_delay_ms`` (which would prevent our ATtiny85 from responding to the computer).
+//To perform our delays without using ``_delay_ms`` (which would prevent our ATtiny85 from talking 
+//to the computer).
 //We use interrupts which are caused by ``timer0`` in CTC mode:
 
 //@code
@@ -551,7 +573,8 @@ void setup_timer()
 }
 //@edoc
 
-//For more information see: http://www.atmel.com/images/atmel-2586-avr-8-bit-microcontroller-attiny25-attiny45-attiny85_datasheet.pdf
+//For more information on which bits need to be set, consider looking 
+//at the `Datasheet <http://www.atmel.com/images/atmel-2586-avr-8-bit-microcontroller-attiny25-attiny45-attiny85_datasheet.pdf>`_
 //@(timer)
 
 //@start(activateLED)
@@ -559,7 +582,8 @@ void setup_timer()
 //Activating an LED
 //*****************
 	
-//Defining a function to turn on a specific LED (and turn off the other LEDs):
+//We are turning off all LEDs by doing a bitwise ``&`` between the current ``PORTB`` register and 
+//the negation of turning on the three LEDs. Afterwards one specific LED is turned on by a bitwise ``|``:
 
 //@code
 void activate_led(uint8_t led)
@@ -579,7 +603,13 @@ void activate_led(uint8_t led)
 //main() function
 //***************
 
-//The foundation of our program has been built, now we need to construct our ``main()`` function upon it:
+//The ``main()`` function consists of three important parts:
+
+//* The setup calls to initiate a connection,
+
+//* the "do forever" loop which will write out our text and set the LEDs and
+
+//* a function called ``usbPoll();`` which will keep the connection alive
 
 //@code
 int main()
@@ -648,13 +678,11 @@ int main()
 //Interrupt
 //*********
 
-//The following function is called every  **1/100 second** by our interrupt timer. 
-//If kbdwtchdg has just been plugged in, the timer counts to our ``INITIAL_DELAY``, every other call (if capslock has been pressed > ``THRESHOLD``) counts to the standard ``DELAY``
-
-//The timer doesn't start counting until it is triggered by first_start or capslock. 
+//The following function is called every  **1/100 seconds** by ``timer0``,
+//but the timer doesn't start counting until it is triggered by ``first_start`` or capslock. 
 //If triggered by ``first_start`` the timer will stop counting when it reaches ``INITIAL_DELAY``.
 //If triggered by capslock the timer will stop counting when it reaches ``DELAY``.
-//The timer cannot count beyond those delay limits
+//The timer cannot count beyond those delay limits.
 
 //@code
 ISR(TIM0_COMPA_vect)
