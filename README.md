@@ -13,4 +13,4 @@ The repo contains an AtmelStudio 7 project file that is preconfigured for kbdwtc
 Just select your programmer and load the project onto your Microcontroller.
 Under /images you can find a circuit diagramm and photos of the project. 
 
-Dokumentation: [documentation](http://kbdwtchdg.readthedocs.io)
+[Documentation can be found here.](http://kbdwtchdg.readthedocs.io)
