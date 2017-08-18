@@ -10,7 +10,5 @@ or after a capslock trigger (pressing capslock x times).
 
 ## How to use
 The repo contains an AtmelStudio 7 project file that is preconfigured for kbdwtchdg. 
-Just select your programmer and load the project onto your Microcontroller.
-Under /images you can find a circuit diagramm and photos of the project. 
 
 [Documentation can be found here.](http://kbdwtchdg.readthedocs.io)
