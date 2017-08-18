@@ -1,9 +1,6 @@
 kbdwtchdg/debug
 .vs
-kbdwtchdg/main.rst
-kbdwtchdg/setup.rst
-kbdwtchdg/changelog.rst
 kbdwtchdg/run-antiweb-sphinx.bat
 docs/doctrees
 doctrees
-docs
+doc/html
