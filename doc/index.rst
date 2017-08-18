@@ -15,7 +15,7 @@ or after a capslock trigger (pressing capslock x times).
 State Diagram by PlantUML
 -------------------------
 
-.. image:: ../images/StateDiagram.png
+.. image:: images/StateDiagram.png
    :scale: 100%
    :align: center
 
@@ -25,4 +25,5 @@ State Diagram by PlantUML
 
    setup
    main
+   antiweb
    changelog
