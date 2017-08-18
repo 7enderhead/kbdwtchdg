@@ -524,7 +524,7 @@ static FILE mystdout = FDEV_SETUP_STREAM(type_out_char, NULL, _FDEV_SETUP_WRITE)
 //@code
 //USER VARIABLES
 
-#define DELAY 18000 //time (in 1/100 seconds) to wait after pressing capslock before writing string
+#define DELAY 60000 //time (in 1/100 seconds) to wait after pressing capslock before writing string
 					//max: ~ 5.8*10^9 years
 
 #define INITIAL_DELAY 3000  //Delay after power before writing string

@@ -8,20 +8,20 @@ Hardware preparation
 Before programming your Attiny85 to run kbdwtchdg you need to build your circuit.
 We built our project according to the following diagram:
 
-.. image:: images/kbdwtchdg.png
+.. image:: ../images/kbdwtchdg.png
    :scale: 40%
    :align: center
    
 Below you can find our suggested layout for the soldering:
 
 
-.. image:: images/boardLayout.gif
+.. image:: ../images/boardLayout.gif
    :scale: 110%
    :align: center
 
 Below is an example photo of the connections on the AVR Dragon programmer:
 
-.. image:: images/circuit_info.png
+.. image:: ../images/circuit_info.png
    :scale: 40%
    :align: center
 
@@ -49,15 +49,15 @@ Example photos
 
 Below you can find some photos we took from our project
 
-.. image:: images/circuit_left.jpg
+.. image:: ../images/circuit_left.jpg
    :scale: 40%
    :align: center
-.. image:: images/circuit_right.jpg
+.. image:: ../images/circuit_right.jpg
    :scale: 40%
    :align: center
-.. image:: images/circuit_sideview.jpg
+.. image:: ../images/circuit_sideview.jpg
    :scale: 40%
    :align: center
-.. image:: images/circuit_topview.jpg
+.. image:: ../images/circuit_topview.jpg
    :scale: 40%
    :align: center
