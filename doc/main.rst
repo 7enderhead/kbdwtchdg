@@ -92,20 +92,20 @@ The user can edit the following variables to adjust kbdwtchdg:
 
     //USER VARIABLES
     
-    #define DELAY 18000 //time (in 1/100 seconds) to wait after pressing capslock before writing string
+    #define DELAY 600 //time (in 1/100 seconds) to wait after pressing capslock before writing string
                                             //max: ~ 5.8*10^9 years
     
-    #define INITIAL_DELAY 3000  //Delay after power before writing string
+    #define INITIAL_DELAY 300  //Delay after power before writing string
                                             //max: ~ 5.8*10^9 years
     
     #define THRESHOLD 3 //pressing capslock more than 3 times triggers the counter
     
-    #define TEXT PSTR("Hello World! This is a text!\n") //Text to be written by kbdwtchdg
+    #define TEXT PSTR("Hello World! This is a text sent by kbdwtchdg!\n") //Text to be written by kbdwtchdg
     
     //Defining the bits to set LED outputs:
     
-    #define LED_RED (1 << PB4) //Turn on red led
-    #define LED_GREEN (1 << PB3) //Turn on green led
+    #define LED_RED (1 << PB3) //Turn on red led
+    #define LED_GREEN (1 << PB4) //Turn on green led
     #define LED_YELLOW (1 << PB0) //Turn on yellow led
     
     //End of USER VARIABLES
