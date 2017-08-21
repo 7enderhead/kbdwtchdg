@@ -18,6 +18,12 @@ Below you can find our suggested layout for the soldering:
 .. image:: ../images/boardLayout.gif
    :scale: 110%
    :align: center
+   
+This is the finished ATtiny85 board:
+
+.. image:: ../images/boardPhoto.jpg
+   :scale: 70%
+   :align: center
 
 Below is an example photo of the connections on the AVR Dragon programmer:
 
