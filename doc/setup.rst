@@ -43,3 +43,21 @@ There are four (4) variables a user may change to adapt kbdwtchdg to their needs
 * ``INITIAL_DELAY`` To change the delay after first power up
 * ``THRESHOLD`` To change the number of capslock presses needed for a trigger
 * ``TEXT`` To change the text that is being sent
+
+Example photos
+==============
+
+Below you can find some photos we took from our project
+
+.. image:: ../images/circuit_left.jpg
+   :scale: 40%
+   :align: center
+.. image:: ../images/circuit_right.jpg
+   :scale: 40%
+   :align: center
+.. image:: ../images/circuit_sideview.jpg
+   :scale: 40%
+   :align: center
+.. image:: ../images/circuit_topview.jpg
+   :scale: 40%
+   :align: center
