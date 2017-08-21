@@ -92,15 +92,15 @@ The user can edit the following variables to adjust kbdwtchdg:
 
     //USER VARIABLES
     
-    #define DELAY 600 //time (in 1/100 seconds) to wait after pressing capslock before writing string
-                                            //max: ~ 5.8*10^9 years
+    #define DELAY 600 // delay (in 1/100th of seconds) to wait after pressing capslock before writing string; max: ~ 5.8*10^9 years
     
-    #define INITIAL_DELAY 300  //Delay after power before writing string
-                                            //max: ~ 5.8*10^9 years
+    #define INITIAL_DELAY 300  //Delay (in 1/100th of seconds) after power before writing string; max: ~ 5.8*10^9 years
     
     #define THRESHOLD 3 //pressing capslock more than 3 times triggers the counter
     
-    #define TEXT PSTR("Hello World! This is a text sent by kbdwtchdg!\n") //Text to be written by kbdwtchdg
+    #define TEXT PSTR("Hello World! This is kbdwatchdog!\n") //Text to be written
+    
+    //#define INTER_KEY_DELAY 500 // delay between key presses in milliseconds
     
     //Defining the bits to set LED outputs:
     
@@ -610,6 +610,10 @@ Performing obligatory background tasks:
             send_report_once();
             keyboard_report_reset(); // release keys
             send_report_once();
+            
+    #ifdef INTER_KEY_DELAY
+            _delay_ms(INTER_KEY_DELAY);
+    #endif
     }
     
     static FILE mystdout = FDEV_SETUP_STREAM(type_out_char, NULL, _FDEV_SETUP_WRITE); // setup writing stream
