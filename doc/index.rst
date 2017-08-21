@@ -4,7 +4,7 @@ Welcome to kbdwtchdg's documentation!
 Overview
 --------
 
-A watchdog running V-USB on an Attiny85 that identifies itself as a USB keyboard and sends keyboard strokes.
+A watchdog running `V-USB <http://www.obdev.at/vusb/>`_ on an Attiny85 that identifies itself as a USB keyboard and sends keyboard strokes.
 
 What Can kbdwtchdg Do?
 ----------------------
