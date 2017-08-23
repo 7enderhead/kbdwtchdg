@@ -1,6 +1,6 @@
 # kbdwtchdg
 ## Overview
-A watchdog running V-USB on an Attiny85 that identifies itself as a USB keyboard and sends keyboard strokes.
+A watchdog running [V-USB](http://www.obdev.at/vusb/) on an Attiny85 that identifies itself as a USB keyboard and sends keyboard strokes.
 
 ## What Can kbdwtchdg Do?
 It sends a defined message via USB to the computer. It does that either after a specific period of time after being plugged in,

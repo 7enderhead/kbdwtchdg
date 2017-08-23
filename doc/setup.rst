@@ -40,30 +40,7 @@ as its project folder. After you made sure all your wires are connected and you 
 reading the voltage and device signature in Tools -> Device Programming) you can build the project using Build/Build kbdwtchdg. If 
 there are no errors you can proceed to load the project onto your Microcontroller using Debug -> Start without Debugging (Ctrl+Alt+F5). 
 
-Configuring the project
+Configuring the Project
 =======================
 
-There are four (4) variables a user may change to adapt kbdwtchdg to their needs. Those are:
-
-* ``DELAY`` To change the delay after a capslock trigger (in 1/100 seconds)
-* ``INITIAL_DELAY`` To change the delay after first power up
-* ``THRESHOLD`` To change the number of capslock presses needed for a trigger
-* ``TEXT`` To change the text that is being sent
-
-Example photos
-==============
-
-Below you can find some photos we took from our project
-
-.. image:: ../images/circuit_left.jpg
-   :scale: 40%
-   :align: center
-.. image:: ../images/circuit_right.jpg
-   :scale: 40%
-   :align: center
-.. image:: ../images/circuit_sideview.jpg
-   :scale: 40%
-   :align: center
-.. image:: ../images/circuit_topview.jpg
-   :scale: 40%
-   :align: center
+See :ref:`label-variables`.
