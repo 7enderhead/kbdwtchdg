@@ -3,9 +3,13 @@
 InitialDelay: Yellow LED
 InitialDelay -> Writing: x seconds
 Writing: Red LED
-Writing -> Waiting
-Waiting: Green LED
-Waiting -> Delay: trigger
+Writing -> Idle: Waiting mode
+Writing -> Monitoring: WTCHDG mode
+Monitoring: Green blink LED
+Monitoring -> Monitoring: Capslock trigger
+Monitoring -> Writing: No trigger
+Idle: Green LED
+Idle -> Delay: Capslock trigger
 Delay: Yellow LED
 Delay -> Writing: y seconds
 @enduml

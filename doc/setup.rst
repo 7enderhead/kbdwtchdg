@@ -43,4 +43,4 @@ there are no errors you can proceed to load the project onto your Microcontrolle
 Configuring the Project
 =======================
 
-See :ref:`label-variables`.
+See `Variables <main.html#variables>`_.

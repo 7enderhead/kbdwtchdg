@@ -52,49 +52,88 @@ The ``main()`` function consists of four important parts:
             // initialize various modules
             usbInit();
     
-      activate_led(LED_YELLOW); //Turn on Yellow LED on power on, then go to infinite loop
+            enum states status;
+            if (first_start)
+            {
+                    status = init_delay_status; //do a first start
+                    activate_led(LED_YELLOW); //activate yellow led on startup
+            }
+            else
+            {
+                    status = writing_status; //skip initial status and writing status
+            }
+    
+    
     
       while (1) // main loop, do forever
       {
+                    //check the current state to choose the next appropriate status
+                    switch (status)
+                    {
+                            //while in monitoring_status, check for capslock triggers
+                            //and make the LED blink
+                            case monitoring_status:
     
-        if(first_start || (blink_count > THRESHOLD) || wtchdg_mode) // activated by blinking lights or first start
-        {
-          if (!wtchdg_mode && !delay_started)
-          {
-          activate_led(LED_YELLOW); //Turn on Yellow LED to indicate waiting status
+                                    if (blink_count > THRESHOLD) // reset timer to keep the watchdog happy
+                                    {
+                                            timer_count = 0;
+                                            blink_count = 0;
+                                            activate_led(LED_YELLOW);
+                                    }
     
-          begin_delay = timer_count; // remember beginning of delay interval
-          delay_started = 1; // delay interval has started
-          }
+                                    if(wtchdg_blink > BLINK_INTERVAL)
+                                    {
+                                            toggle_green_led();
     
-          if ((first_start && (timer_count >= (begin_delay + INITIAL_DELAY))) || //initial delay at first start
-            (!first_start && (timer_count >= (begin_delay + DELAY)) && !wtchdg_mode) || //delay after capslock trigger
-            (!first_start && (timer_count > WTCHDG_INTERVAL) && wtchdg_mode)) // write after interval has passed in WTCHDG mode
-          {
-            writing_procedure();
+                                            wtchdg_blink = 0;
+                                    }
     
-            delay_started = 0; // reset delay interval
-          }
+                            case init_delay_status:
+                            case delay_status:
     
-          if (!first_start && wtchdg_mode) //we are in WTCHDG mode
-          {
-            if (blink_count > THRESHOLD) // reset timer to keep the watchdog happy
-            {
-              timer_count = 0;
-              blink_count = 0;
-            }
+                                    //starting the delay before writing
+                  if (!wtchdg_mode && !delay_started) //dont't enter if the delay interval already started
+                  {
+                          activate_led(LED_YELLOW); //Turn on Yellow LED to indicate waiting status
     
-            if(wtchdg_blink > BLINK_INTERVAL)
-            {
-              toggle_green_led();
+                          begin_delay = timer_count; // remember beginning of delay interval
+                          delay_started = 1; // delay interval has started
+                  }
     
-              wtchdg_blink = 0;
-            }
-          }
-        }
-        else
-        {
-          activate_led(LED_GREEN); // Turn on Green LED to indicate idle status
+                  if ((first_start && (timer_count >= (begin_delay + INITIAL_DELAY))) || //initial delay at first start
+                    (!first_start && (timer_count >= (begin_delay + DELAY)) && !wtchdg_mode) || //delay after capslock trigger
+                    (!first_start && (timer_count > WTCHDG_INTERVAL) && wtchdg_mode)) // write after interval has passed in WTCHDG mode
+                  {
+    
+                    writing_procedure();
+    
+                                            status = writing_status;
+                    delay_started = 0; // reset delay interval
+                  }
+                                    break;
+    
+                            case writing_status: //we finished writing status
+    
+                  if (wtchdg_mode) //we are in WTCHDG mode
+                  {
+                                            status = monitoring_status;
+                  }
+    
+                                    else
+                                    {
+                                            status = idle_status;
+    
+                          activate_led(LED_GREEN); // Turn on Green LED to indicate idle status
+                                    }
+                                    break;
+    
+                            case idle_status:
+    
+                                    if (blink_count > THRESHOLD)
+                                    {
+                                            status = delay_status;
+                                    }
+                                    break;
         }
     
         // perform usb related background tasks
@@ -116,16 +155,23 @@ The user can edit the following variables to adjust kbdwtchdg:
 
     //USER VARIABLES
     
-    //#define WTCHDG // Change between two modes. If defined, WTCHDG mode is active (press capslock at least 1x in the defined interval, otherwise write TEXT).
+    #define WTCHDG // Change between two modes. If uncommented, WTCHDG mode is active
+                                    //(press capslock at least "THRESHOLD" times in the defined interval,
+                                    //otherwise write TEXT).
                                     //If not defined, waiting mode is active (press capslock > THRESHOLD to write TEXT).
     
     #define WTCHDG_INTERVAL 1000 //Set interval for WTCHDG mode (in 1/100 seconds)
     
     #define BLINK_INTERVAL 25 //set interval for blinking LED
     
-    #define DELAY 600 // delay (in 1/100th of seconds) to wait after pressing capslock before writing string; max: ~ 5.8*10^9 years
+    #define DELAY 600 // delay (in 1/100th of seconds) to wait after pressing capslock
+                                                                            // before writing string; max: ~ 5.8*10^9 years
     
-    #define INITIAL_DELAY 300  //Delay (in 1/100th of seconds) after power before writing string; max: ~ 5.8*10^9 years
+    #define INITIAL_DELAY 300  //Delay (in 1/100th of seconds) after power
+                                                                            // before writing string; max: ~ 5.8*10^9 years
+    
+    #define FIRST_START //uncomment if you want kbdwtchdg to write
+                                                                                    //on power up
     
     #define THRESHOLD 3 //pressing capslock more than 3 times triggers the counter
     
@@ -135,9 +181,9 @@ The user can edit the following variables to adjust kbdwtchdg:
     
     //Defining the bits to set LED outputs:
     
-    #define LED_RED (1 << PB3) //Turn on red led
-    #define LED_GREEN (1 << PB4) //Turn on green led
-    #define LED_YELLOW (1 << PB0) //Turn on yellow led
+    #define LED_RED (1 << PB3) //Turn on red led on PB3
+    #define LED_GREEN (1 << PB4) //Turn on green led on PB4
+    #define LED_YELLOW (1 << PB0) //Turn on yellow led on PB0
     
     //End of USER VARIABLES
     
@@ -155,9 +201,10 @@ We use interrupts which are caused by ``timer0`` in CTC mode:
 
     volatile uint64_t timer_count;
     volatile uint64_t wtchdg_blink;
-    volatile uint8_t first_start = 1;
     volatile uint64_t begin_delay;
     volatile uint8_t delay_started = 0;
+    
+    enum states { init_delay_status, writing_status, idle_status, monitoring_status, delay_status };
     
     void setup_timer()
     {
