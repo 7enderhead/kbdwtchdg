@@ -1,11 +1,15 @@
 @startuml
-[*] -> InitialDelay: power
-InitialDelay: Yellow LED
-InitialDelay -> Writing: x seconds
-Writing: Red LED
-Writing -> Waiting
-Waiting: Green LED
-Waiting -> Delay: trigger
-Delay: Yellow LED
-Delay -> Writing: y seconds
+[*] -down-> init_delay: power
+init_delay: yellow LED, optional state
+init_delay -down-> writing: INITIAL_DELAY
+writing: red LED, reset timer
+writing -left-> idle: WTCHDG == 0
+writing -right-> monitoring: WTCHDG == 1
+monitoring: green blinking LED
+monitoring -> monitoring: capslock trigger\n reset timer
+monitoring -left-> writing: No capslock trigger\n in WTCHDG_INTERVAL
+idle: green LED
+idle -> delay: capslock trigger
+delay: yellow LED
+delay -> writing: DELAY
 @enduml
