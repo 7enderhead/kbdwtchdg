@@ -4,16 +4,16 @@ A watchdog running [V-USB](http://www.obdev.at/vusb/) on an Attiny85 that identi
 
 ## What Can kbdwtchdg Do?
 
-###WTCHDG Mode
+### WTCHDG Mode
 
 In WTCHDG mode, kbdwtchdg listens for the capslock trigger to occur during WTCHDG_INTERVAL. If no trigger occurs, the text is written.
 If a trigger occurs, the timer is reset.
 
-###Non-WTCHDG Mode
+### Non-WTCHDG Mode
 
 After receiving the capslock trigger and waiting for DELAY time the text is written.
 
-###Initial Writing
+### Initial Writing
 
 If first_start is set the text is written after INITIAL_DELAY after power up.
 
