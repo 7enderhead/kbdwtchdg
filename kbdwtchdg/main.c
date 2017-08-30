@@ -111,7 +111,7 @@ uint8_t first_start = 1; //set to 1 if you want kbdwtchdg to write
 #define TEXT PSTR("Hello World! This is kbdwatchdog!\n") //Text to be written
 
 #define INTER_KEY_DELAY 100 // delay between key presses in milliseconds
-                            //comment if no delay is desired
+                            //comment out whole definition if no delay is desired
 
 //Defining the bits to set LED outputs:
 
@@ -694,10 +694,15 @@ void start_delay()
 //Writing Procedure
 //*****************
 
-//The writing prodecure consists of turning the RED LED on (to indicate writinng) and writing the defined text.
+//The writing prodecure consists of turning the RED LED on (to indicate writing) and writing the defined text.
 
-//Afterwards ``timer_count``, ``blink_count`` and ``delay startet`` are reset,
-//``first_start`` is set to false (0).
+//Afterwards ``timer_count``and ``blink_count`` are reset, ``delay startet`` and
+//``first_start`` are set to false (0).
+
+//* ``timer_count`` is set to 0 so the timer restarts
+//* ``blink_count`` needs to be reset to 0 so we can start counting again
+//* ``delay_started`` is set to false (0) because the delay already finished
+//* ``first_start`` needs to be set to false (0), as the initial delay/first start has already finished
 
 //@code
 void writing_procedure()
