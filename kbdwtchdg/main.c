@@ -16,6 +16,8 @@
 //@include(interrupt)
 //@include(CapsCounter)
 //@include(activateLED)
+//@include(writing_procedure)
+//@include(delay_keystrokes)
 //@include(ASCII)
 //@include(HidReport)
 //@include(usbFunction)
@@ -74,6 +76,53 @@ Copyright by Frank Zhao (http://www.frank-zhao.com), Philipp Rathmanner (https:/
 #include <util/delay.h>
 //@edoc
 //@(definitions)
+
+
+//@start(variables)
+//*********
+//Variables
+//*********
+
+//The user can edit the following variables to adjust kbdwtchdg:
+
+//@code
+//USER VARIABLES
+
+#define WTCHDG 1 // Change between two modes. If 1, WTCHDG mode is active
+                 //(press capslock at least "THRESHOLD" times in the defined interval,
+                 //otherwise write TEXT).
+                 //If 0, waiting mode is active (press capslock > THRESHOLD to write TEXT).
+
+#define WTCHDG_INTERVAL 1000 //Set interval for WTCHDG mode (in 1/100 seconds)
+
+#define BLINK_INTERVAL 25 //set interval for blinking LED
+
+#define DELAY 600 // delay (in 1/100th of seconds) to wait after pressing capslock
+                  // before writing string; max: ~ 5.8*10^9 years
+
+#define INITIAL_DELAY 300  //Delay (in 1/100th of seconds) after power
+                           // before writing string; max: ~ 5.8*10^9 years
+
+uint8_t first_start = 1; //set to 1 if you want kbdwtchdg to write
+                         //on power up. Otherwise set to 0
+
+#define THRESHOLD 3 //pressing capslock more than 3 times triggers the counter
+
+#define TEXT PSTR("Hello World! This is kbdwatchdog!\n") //Text to be written
+
+#define INTER_KEY_DELAY 100 // delay between key presses in milliseconds
+                            //comment out whole definition if no delay is desired
+
+//Defining the bits to set LED outputs:
+
+#define LED_RED (1 << PB3) //Turn on red led on PB3
+#define LED_GREEN (1 << PB4) //Turn on green led on PB4
+#define LED_YELLOW (1 << PB0) //Turn on yellow led on PB0
+
+//End of USER VARIABLES
+
+//@edoc
+//@(variables)
 
 //@start(HidReport)
 //*********************
@@ -294,6 +343,32 @@ void usbEventResetReady(void)
 //@edoc
 //@(Oscillator)
 
+//@start(delay_keystrokes)
+//****************
+//Delay Keystrokes
+//****************
+
+//To set a delay between the key presses, the following function will
+//call a delay of 5ms and then ``usbPoll();``. This sequence is being
+//repeated until the defined delay is reached.
+
+//@code
+void delay_keystrokes(uint64_t ms)
+{
+	const uint8_t milliseconds = 5;
+	uint64_t loop_count = ms/milliseconds; //get the amount of loops necessary
+	uint64_t i;
+
+	// a delay bigger than 10ms would kill the connection, so we split
+	//the delay up into little delays that do not harm our connection
+	for (i = 0; i <= loop_count; i++)
+	{
+		_delay_ms(milliseconds);
+		usbPoll();
+	}
+}
+//@edoc
+//@(delay_keystrokes)
 
 //@start(ASCII)
 //****************
@@ -311,6 +386,11 @@ void ASCII_to_keycode(uint8_t ascii)
 	keyboard_report.modifier = 0x00;
 
 	// see scancode.doc appendix C
+
+	//delay between the keystrokes
+	#ifdef INTER_KEY_DELAY
+		delay_keystrokes(INTER_KEY_DELAY);
+	#endif
 
 	if (ascii >= 'A' && ascii <= 'Z')
 	{
@@ -462,11 +542,13 @@ void ASCII_to_keycode(uint8_t ascii)
 			keyboard_report.keycode[0] = 0x2C;
 			break;
 			case '\t':
-			keyboard_report.keycode[0] = 0x2B;
+			keyboard_report.keycode[0] = 0x2B; //tab
 			break;
 			case '\n':
-			keyboard_report.keycode[0] = 0x28;
+			keyboard_report.keycode[0] = 0x28; //enter
 			break;
+			case '\b':
+			keyboard_report.keycode[0] = 0x2A; //backspace
 		}
 	}
 }
@@ -507,61 +589,12 @@ void type_out_char(uint8_t ascii, FILE *stream)
 	send_report_once();
 	keyboard_report_reset(); // release keys
 	send_report_once();
-
-#ifdef INTER_KEY_DELAY
-	_delay_ms(INTER_KEY_DELAY);
-#endif
 }
 
 static FILE mystdout = FDEV_SETUP_STREAM(type_out_char, NULL, _FDEV_SETUP_WRITE); // setup writing stream
 
 //@edoc
 //@(background)
-
-//@start(variables)
-//*********
-//Variables
-//*********
-
-//The user can edit the following variables to adjust kbdwtchdg:
-
-//@code
-//USER VARIABLES
-
-#define WTCHDG 1 // Change between two modes. If 1, WTCHDG mode is active
-				//(press capslock at least "THRESHOLD" times in the defined interval,
-				//otherwise write TEXT).
-				//If 0, waiting mode is active (press capslock > THRESHOLD to write TEXT).
-
-#define WTCHDG_INTERVAL 1000 //Set interval for WTCHDG mode (in 1/100 seconds)
-
-#define BLINK_INTERVAL 25 //set interval for blinking LED
-
-#define DELAY 600 // delay (in 1/100th of seconds) to wait after pressing capslock
-									// before writing string; max: ~ 5.8*10^9 years
-
-#define INITIAL_DELAY 300  //Delay (in 1/100th of seconds) after power
-									// before writing string; max: ~ 5.8*10^9 years
-
-uint8_t first_start = 1; //set to 1 if you want kbdwtchdg to write
-										//on power up. Otherwise set to 0
-
-#define THRESHOLD 3 //pressing capslock more than 3 times triggers the counter
-
-#define TEXT PSTR("Hello World! This is kbdwatchdog!\n") //Text to be written
-
-#define INTER_KEY_DELAY 500 // delay between key presses in milliseconds
-
-//Defining the bits to set LED outputs:
-
-#define LED_RED (1 << PB3) //Turn on red led on PB3
-#define LED_GREEN (1 << PB4) //Turn on green led on PB4
-#define LED_YELLOW (1 << PB0) //Turn on yellow led on PB0
-
-//End of USER VARIABLES
-
-//@edoc
-//@(variables)
 
 #define OUTPUT_BITS 0b00011001 //Define PB3 as green output,
 															//PB4 as red output and PB0 as yellow output
@@ -661,9 +694,15 @@ void start_delay()
 //Writing Procedure
 //*****************
 
-//The writing prodecure consists of turning the RED LED on (to indicate writinng) and writing the defined text.
+//The writing prodecure consists of turning the RED LED on (to indicate writing) and writing the defined text.
 
-//Afterwards ``timer_count`` and ``blink_count`` are reset.
+//Afterwards ``timer_count``and ``blink_count`` are reset, ``delay startet`` and
+//``first_start`` are set to false (0).
+
+//* ``timer_count`` is set to 0 so the timer restarts
+//* ``blink_count`` needs to be reset to 0 so we can start counting again
+//* ``delay_started`` is set to false (0) because the delay already finished
+//* ``first_start`` needs to be set to false (0), as the initial delay/first start has already finished
 
 //@code
 void writing_procedure()
@@ -676,7 +715,7 @@ void writing_procedure()
   blink_count = 0; // reset capslock counter
   timer_count = 0; // reset timer
   first_start = 0; // no first start anymore
-	delay_started = 0; // reset delay interval
+  delay_started = 0; // reset delay interval
 }
 //@edoc
 //@(writing_procedure)
@@ -716,7 +755,7 @@ int main()
 	keyboard_report_reset();
 
 	wdt_disable(); // disable ATtiny85's internal watchdog (no connection to our wtchdg)
-									//good habit if you don't use it
+                 //good habit if you don't use it
 
 	// enforce USB re-enumeration by pretending to disconnect and reconnect
 	usbDeviceDisconnect();
@@ -749,7 +788,7 @@ int main()
 
   while (1) // main loop, do forever
   {
-		//check the current state to choose the next appropriate state in the chain
+    //check the current state to choose the next appropriate state in the chain
 		switch (state)
 		{
 			case init_delay: // perform a delay using INITIAL_DELAY
@@ -767,7 +806,7 @@ int main()
 
 			case delay: // capsloock has been triggered, perform a delay
 
-				//starting the delay before writing
+        //starting the delay before writing
 	      if (!delay_started) //dont't enter if the delay interval already started
 	      {
 	      	start_delay();
@@ -780,7 +819,7 @@ int main()
 				break;
 
 			case monitoring: //while in monitoring state, check for capslock triggers
-												//and make the LED blink
+                       //and make the LED blink
 
 				if (blink_count > THRESHOLD) // reset timer to keep the watchdog happy
 				{
