@@ -2,16 +2,19 @@
 [*] -down-> init_delay: first_start == 1
 [*] -right-> monitoring: first_start == 0\nWTCHDG == 1
 [*] -left-> idle: first_start == 0\nWTCHDG == 0
-init_delay: yellow LED, optional state
+init_delay: yellow LED
 init_delay -down-> writing: wait INITIAL_DELAY
-writing: red LED, reset timer
+writing: red LED
 writing -left-> idle: WTCHDG == 0
-writing -right-> monitoring: WTCHDG == 1
-monitoring: green blinking LED
+writing -down-> monitoring: WTCHDG == 1
+monitoring: green LED
 monitoring -> monitoring: capslock trigger\n reset timer
-monitoring -left-> writing: No capslock trigger\n in WTCHDG_INTERVAL
+monitoring -left-> monitoring_warning: after WTCHDG_INTERVAL * WARNING_THRESHOLD
+monitoring_warning: yellow and green LED
+monitoring_warning -right-> monitoring: capslock trigger\n reset timer
+monitoring_warning -up-> writing: No capslock trigger\n in WTCHDG_INTERVAL
 idle: green LED
-idle -> delay: capslock trigger
+idle --> delay: capslock trigger
 delay: yellow LED
-delay -> writing: wait DELAY
+delay --> writing: wait DELAY
 @enduml

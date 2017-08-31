@@ -615,7 +615,7 @@ volatile uint64_t wtchdg_blink;
 volatile uint64_t begin_delay;
 volatile uint8_t delay_started = 0;
 
-enum states { init_delay, writing, idle, monitoring, delay };
+enum states { init_delay, writing, idle, monitoring, monitoring_warning, delay };
 
 void setup_timer()
 {
@@ -663,7 +663,7 @@ void activate_2_leds(uint8_t led1, uint8_t led2)
   PORTB &= ~(LED_YELLOW | LED_RED | LED_GREEN);
 
   // turn on 2 LEDs
-  PORTB |= (led1) | (led2);
+  PORTB |= ((led1) | (led2));
 }
 //@edoc
 //@(activateLED)
@@ -684,6 +684,15 @@ void start_delay()
 //@edoc
 
 //@(start_delay)
+
+void WTCHDG_checkTrigger()
+{
+  if (blink_count > THRESHOLD) // reset timer to keep the watchdog happy
+  {
+     timer_count = 0;
+     blink_count = 0;
+  }
+}
 
 //@start(writing_procedure)
 //*****************
@@ -795,50 +804,51 @@ int main()
             }
 
             if (timer_count >= (begin_delay + INITIAL_DELAY)) // initial delay at first start
-         {
+            {
                state = writing;
-         }
+            }
             break;
 
          case delay: // capsloock has been triggered, perform a delay
 
-        // starting the delay before writing
-         if (!delay_started) // dont't enter if the delay interval already started
-         {
-            start_delay();
-         }
+           // starting the delay before writing
+            if (!delay_started) // dont't enter if the delay interval already started
+            {
+               start_delay();
+            }
 
-         if (timer_count >= (begin_delay + DELAY)) // delay after capslock trigger
-         {
-               state = writing;
-         }
+            if (timer_count >= (begin_delay + DELAY)) // delay after capslock trigger
+            {
+                  state = writing;
+            }
             break;
 
          case monitoring: // while in monitoring state, check for capslock triggers
 
-            if (blink_count > THRESHOLD) // reset timer to keep the watchdog happy
-            {
-               timer_count = 0;
-               blink_count = 0;
+            activate_led(LED_GREEN);
 
-               activate_led(LED_YELLOW);
-               _delay_ms(5);
+            WTCHDG_checkTrigger();
+
+            if(timer_count > (WTCHDG_INTERVAL * 0.75))
+            {
+               state = monitoring_warning; // go to monitoring_warning
             }
 
-            if (timer_count > WTCHDG_INTERVAL)
+            break;
+
+        case monitoring_warning:
+
+            activate_2_leds(LED_GREEN, LED_YELLOW); // 2 LEDs, indicate warning
+
+            WTCHDG_checkTrigger(); // check if user has sent trigger to reset timer
+
+            if (timer_count > WTCHDG_INTERVAL) // no trigger in interval
             {
                state = writing; // write after interval has passed in WTCHDG mode
             }
-            else
+            else if(timer_count < (WTCHDG_INTERVAL * 0.75)) // timer has been reset
             {
-              if(timer_count < (WTCHDG_INTERVAL * 0.8))
-              {
-                activate_led(LED_GREEN);
-              }
-              else
-              {
-                activate_2_leds(LED_GREEN, LED_YELLOW);
-              }
+               state = monitoring;
             }
             break;
 
@@ -846,10 +856,10 @@ int main()
 
             writing_procedure();
 
-         if (WTCHDG == 1) // we are in WTCHDG mode
-         {
-               state = monitoring;
-         }
+            if (WTCHDG == 1) // we are in WTCHDG mode
+            {
+                 state = monitoring;
+            }
             else
             {
                state = idle;
