@@ -53,7 +53,7 @@ The ``main()`` function consists of four important parts:
        // initialize various modules
        usbInit();
     
-       enum states state;
+       State state;
        if (first_start)
        {
           state = init_delay; // do a first start
@@ -61,18 +61,15 @@ The ``main()`` function consists of four important parts:
        }
        else // skip the first_start
        {
-          if (WTCHDG == 1) // we are in WTCHDG mode
+          if (WTCHDG) // we are in WTCHDG mode
           {
              state = monitoring; // skip initial state and writing state, go to monitoring
           }
-    
           else
           {
              state = idle; // skip initial and writing state, go to idle
           }
        }
-    
-    
     
       while (1) // main loop, do forever
       {
@@ -87,76 +84,67 @@ The ``main()`` function consists of four important parts:
                 }
     
                 if (timer_count >= (begin_delay + INITIAL_DELAY)) // initial delay at first start
-             {
+                {
                    state = writing;
-             }
+                }
                 break;
     
              case delay: // capsloock has been triggered, perform a delay
     
-            // starting the delay before writing
-             if (!delay_started) // dont't enter if the delay interval already started
-             {
-                start_delay();
-             }
+               // starting the delay before writing
+                if (!delay_started) // dont't enter if the delay interval already started
+                {
+                   start_delay();
+                }
     
-             if (timer_count >= (begin_delay + DELAY)) // delay after capslock trigger
-             {
-                   state = writing;
-             }
+                if (timer_count >= (begin_delay + DELAY)) // delay after capslock trigger
+                {
+                      state = writing;
+                }
                 break;
     
              case monitoring: // while in monitoring state, check for capslock triggers
     
-                if (blink_count > THRESHOLD) // reset timer to keep the watchdog happy
+                activate_led(LED_GREEN);
+    
+                state = check_trigger(state);
+    
+                if(timer_count > WARNING_INTERVAL)
                 {
-                   timer_count = 0;
-                   blink_count = 0;
-    
-                   activate_led(LED_YELLOW);
-                   _delay_ms(5);
+                   state = monitoring_warning; // go to monitoring_warning
                 }
+                break;
     
-                if (timer_count > WTCHDG_INTERVAL)
+            case monitoring_warning:
+    
+                activate_2_leds(LED_GREEN, LED_YELLOW); // 2 LEDs, indicate warning
+    
+                state = check_trigger(state); // check if user has sent trigger to reset timer
+    
+                if (timer_count > WTCHDG_INTERVAL) // no trigger in interval
                 {
                    state = writing; // write after interval has passed in WTCHDG mode
-                }
-                else
-                {
-                  if(timer_count < (WTCHDG_INTERVAL * 0.8))
-                  {
-                    activate_led(LED_GREEN);
-                  }
-                  else
-                  {
-                    activate_2_leds(LED_GREEN, LED_YELLOW);
-                  }
                 }
                 break;
     
              case writing: // print out our text, proceed to next state
     
-                writing_procedure();
+                write();
     
-             if (WTCHDG == 1) // we are in WTCHDG mode
-             {
-                   state = monitoring;
-             }
+                if (WTCHDG) // we are in WTCHDG mode
+                {
+                     state = monitoring;
+                }
                 else
                 {
                    state = idle;
-    
                 }
                 break;
     
              case idle: // wait for capslock trigger
     
                 activate_led(LED_GREEN); // Turn on Green LED to indicate idle state
-    
-                if (blink_count > THRESHOLD)
-                {
-                   state = delay;
-                }
+                state = check_trigger(state);
                 break;
         } // switch
     
@@ -184,7 +172,10 @@ The user can edit the following variables to adjust kbdwtchdg:
                      //otherwise write TEXT).
                      //If 0, waiting mode is active (press capslock > THRESHOLD to write TEXT).
     
-    #define WTCHDG_INTERVAL 3000 //Set interval for WTCHDG mode (in 1/100 seconds)
+    #define WTCHDG_INTERVAL 3000 // Set interval for WTCHDG mode (in 1/100 seconds)
+    
+    #define WARNING_THRESHOLD 0.8 // Percentage (given between 0 and 1) of WTCHDG_INTERVAL
+                                    // after which monitoring_warning state is entered
     
     #define BLINK_INTERVAL 25 //set interval for blinking LED
     
@@ -225,12 +216,12 @@ We use interrupts which are caused by ``timer0`` in CTC mode:
 
 ::
 
-    volatile uint64_t timer_count;
+    volatile uint64_t timer_count = 0;
     volatile uint64_t wtchdg_blink;
     volatile uint64_t begin_delay;
     volatile uint8_t delay_started = 0;
     
-    enum states { init_delay, writing, idle, monitoring, delay };
+    typedef enum state { init_delay, writing, idle, monitoring, monitoring_warning, delay } State;
     
     void setup_timer()
     {
@@ -332,7 +323,7 @@ the negation of turning on the three LEDs. Afterwards one or two specific LEDs a
       PORTB &= ~(LED_YELLOW | LED_RED | LED_GREEN);
     
       // turn on 2 LEDs
-      PORTB |= (led1) | (led2);
+      PORTB |= ((led1) | (led2));
     }
 
 *****************
@@ -352,15 +343,14 @@ Afterwards ``timer_count``and ``blink_count`` are reset, ``delay startet`` and
 
 ::
 
-    void writing_procedure()
+    void write()
     {
     
       activate_led(LED_RED); // Turn red LED on to represent writing state
     
       printf_P(TEXT); // Printing our TEXT
     
-      blink_count = 0; // reset capslock counter
-      timer_count = 0; // reset timer
+      reset_timer();
       first_start = 0; // no first start anymore
       delay_started = 0; // reset delay interval
     }
