@@ -88,12 +88,15 @@ Copyright by Frank Zhao (http://www.frank-zhao.com), Philipp Rathmanner (https:/
 //@code
 //USER VARIABLES
 
-#define WTCHDG 1 // Change between two modes. If 1, WTCHDG mode is active
+#define WTCHDG 0 // Change between two modes. If 1, WTCHDG mode is active
                  //(press capslock at least "THRESHOLD" times in the defined interval,
                  //otherwise write TEXT).
                  //If 0, waiting mode is active (press capslock > THRESHOLD to write TEXT).
 
-#define WTCHDG_INTERVAL 3000 //Set interval for WTCHDG mode (in 1/100 seconds)
+#define WTCHDG_INTERVAL 3000 // Set interval for WTCHDG mode (in 1/100 seconds)
+
+#define WARNING_THRESHOLD 0.8 // Percentage (given between 0 and 1) of WTCHDG_INTERVAL
+                                // after which monitoring_warning state is entered
 
 #define BLINK_INTERVAL 25 //set interval for blinking LED
 
@@ -124,7 +127,7 @@ uint8_t first_start = 1; //set to 1 if you want kbdwtchdg to write
 
 //@edoc
 //@(variables)
-
+#define WARNING_INTERVAL (WTCHDG_INTERVAL * WARNING_THRESHOLD)
 //@start(HidReport)
 //*********************
 //HID Report Descriptor
@@ -610,12 +613,12 @@ static FILE mystdout = FDEV_SETUP_STREAM(type_out_char, NULL, _FDEV_SETUP_WRITE)
 //We use interrupts which are caused by ``timer0`` in CTC mode:
 
 //@code
-volatile uint64_t timer_count;
+volatile uint64_t timer_count = 0;
 volatile uint64_t wtchdg_blink;
 volatile uint64_t begin_delay;
 volatile uint8_t delay_started = 0;
 
-enum states { init_delay, writing, idle, monitoring, monitoring_warning, delay };
+typedef enum state { init_delay, writing, idle, monitoring, monitoring_warning, delay } State;
 
 void setup_timer()
 {
@@ -685,13 +688,33 @@ void start_delay()
 
 //@(start_delay)
 
-void WTCHDG_checkTrigger()
+void reset_timer()
 {
+  timer_count = 0;
+  blink_count = 0;
+}
+
+State check_trigger(State old_state)
+{
+  State new_state = old_state;
   if (blink_count > THRESHOLD) // reset timer to keep the watchdog happy
   {
-     timer_count = 0;
-     blink_count = 0;
+    switch(old_state)
+    {
+      case idle:
+        new_state = delay;
+        break;
+      case monitoring:
+        new_state = old_state;
+        reset_timer();
+        break;
+      case monitoring_warning:
+        new_state = monitoring;
+        reset_timer();
+        break;
+    }
   }
+  return new_state;
 }
 
 //@start(writing_procedure)
@@ -710,15 +733,14 @@ void WTCHDG_checkTrigger()
 //* ``first_start`` needs to be set to false (0), as the initial delay/first start has already finished
 
 //@code
-void writing_procedure()
+void write()
 {
 
   activate_led(LED_RED); // Turn red LED on to represent writing state
 
   printf_P(TEXT); // Printing our TEXT
 
-  blink_count = 0; // reset capslock counter
-  timer_count = 0; // reset timer
+  reset_timer();
   first_start = 0; // no first start anymore
   delay_started = 0; // reset delay interval
 }
@@ -770,7 +792,7 @@ int main()
    // initialize various modules
    usbInit();
 
-   enum states state;
+   State state;
    if (first_start)
    {
       state = init_delay; // do a first start
@@ -778,18 +800,15 @@ int main()
    }
    else // skip the first_start
    {
-      if (WTCHDG == 1) // we are in WTCHDG mode
+      if (WTCHDG) // we are in WTCHDG mode
       {
          state = monitoring; // skip initial state and writing state, go to monitoring
       }
-
       else
       {
          state = idle; // skip initial and writing state, go to idle
       }
    }
-
-
 
   while (1) // main loop, do forever
   {
@@ -827,54 +846,44 @@ int main()
 
             activate_led(LED_GREEN);
 
-            WTCHDG_checkTrigger();
+            state = check_trigger(state);
 
-            if(timer_count > (WTCHDG_INTERVAL * 0.75))
+            if(timer_count > WARNING_INTERVAL)
             {
                state = monitoring_warning; // go to monitoring_warning
             }
-
             break;
 
         case monitoring_warning:
 
             activate_2_leds(LED_GREEN, LED_YELLOW); // 2 LEDs, indicate warning
 
-            WTCHDG_checkTrigger(); // check if user has sent trigger to reset timer
+            state = check_trigger(state); // check if user has sent trigger to reset timer
 
             if (timer_count > WTCHDG_INTERVAL) // no trigger in interval
             {
                state = writing; // write after interval has passed in WTCHDG mode
             }
-            else if(timer_count < (WTCHDG_INTERVAL * 0.75)) // timer has been reset
-            {
-               state = monitoring;
-            }
             break;
 
          case writing: // print out our text, proceed to next state
 
-            writing_procedure();
+            write();
 
-            if (WTCHDG == 1) // we are in WTCHDG mode
+            if (WTCHDG) // we are in WTCHDG mode
             {
                  state = monitoring;
             }
             else
             {
                state = idle;
-
             }
             break;
 
          case idle: // wait for capslock trigger
 
             activate_led(LED_GREEN); // Turn on Green LED to indicate idle state
-
-            if (blink_count > THRESHOLD)
-            {
-               state = delay;
-            }
+            state = check_trigger(state);
             break;
     } // switch
 
