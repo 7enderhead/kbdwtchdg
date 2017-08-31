@@ -93,12 +93,13 @@ Copyright by Frank Zhao (http://www.frank-zhao.com), Philipp Rathmanner (https:/
                  //otherwise write TEXT).
                  //If 0, waiting mode is active (press capslock > THRESHOLD to write TEXT).
 
-#define WTCHDG_INTERVAL 1000 //Set interval for WTCHDG mode (in 1/100 seconds)
+#define WTCHDG_INTERVAL 3000 //Set interval for WTCHDG mode (in 1/100 seconds)
 
 #define BLINK_INTERVAL 25 //set interval for blinking LED
 
 #define DELAY 600 // delay (in 1/100th of seconds) to wait after pressing capslock
                   // before writing string; max: ~ 5.8*10^9 years
+                  // has no effect in WTCHDG mode
 
 #define INITIAL_DELAY 300  //Delay (in 1/100th of seconds) after power
                            // before writing string; max: ~ 5.8*10^9 years
@@ -113,13 +114,13 @@ uint8_t first_start = 1; //set to 1 if you want kbdwtchdg to write
 #define INTER_KEY_DELAY 100 // delay between key presses in milliseconds
                             //comment out whole definition if no delay is desired
 
-//Defining the bits to set LED outputs:
+// Defining the bits to set LED outputs:
 
 #define LED_RED (1 << PB3) //Turn on red led on PB3
 #define LED_GREEN (1 << PB4) //Turn on green led on PB4
 #define LED_YELLOW (1 << PB0) //Turn on yellow led on PB0
 
-//End of USER VARIABLES
+// End of USER VARIABLES
 
 //@edoc
 //@(variables)
@@ -356,11 +357,11 @@ void usbEventResetReady(void)
 void delay_keystrokes(uint64_t ms)
 {
    const uint8_t milliseconds = 5;
-   uint64_t loop_count = ms/milliseconds; //get the amount of loops necessary
+   uint64_t loop_count = ms/milliseconds; // get the amount of loops necessary
    uint64_t i;
 
    // a delay bigger than 10ms would kill the connection, so we split
-   //the delay up into little delays that do not harm our connection
+   // the delay up into little delays that do not harm our connection
    for (i = 0; i <= loop_count; i++)
    {
       _delay_ms(milliseconds);
@@ -387,7 +388,7 @@ void ASCII_to_keycode(uint8_t ascii)
 
    // see scancode.doc appendix C
 
-   //delay between the keystrokes
+   // delay between the keystrokes
    #ifdef INTER_KEY_DELAY
       delay_keystrokes(INTER_KEY_DELAY);
    #endif
@@ -542,13 +543,13 @@ void ASCII_to_keycode(uint8_t ascii)
          keyboard_report.keycode[0] = 0x2C;
          break;
          case '\t':
-         keyboard_report.keycode[0] = 0x2B; //tab
+         keyboard_report.keycode[0] = 0x2B; // tab
          break;
          case '\n':
-         keyboard_report.keycode[0] = 0x28; //enter
+         keyboard_report.keycode[0] = 0x28; // enter
          break;
          case '\b':
-         keyboard_report.keycode[0] = 0x2A; //backspace
+         keyboard_report.keycode[0] = 0x2A; // backspace
       }
    }
 }
@@ -596,8 +597,8 @@ static FILE mystdout = FDEV_SETUP_STREAM(type_out_char, NULL, _FDEV_SETUP_WRITE)
 //@edoc
 //@(background)
 
-#define OUTPUT_BITS 0b00011001 //Define PB3 as green output,
-                                             //PB4 as red output and PB0 as yellow output
+#define OUTPUT_BITS 0b00011001 // Define PB3 as green output,
+                               // PB4 as red output and PB0 as yellow output
 
 //@start(timer)
 //***********
@@ -618,15 +619,15 @@ enum states { init_delay, writing, idle, monitoring, delay };
 
 void setup_timer()
 {
-   DDRB = OUTPUT_BITS; //Setting the output bits
+   DDRB = OUTPUT_BITS; // Setting the output bits
 
-   TCCR0A |= (1 << WGM01); //Configure timer0 to CTC mode
+   TCCR0A |= (1 << WGM01); // Configure timer0 to CTC mode
 
-   TIMSK |= (1 << OCIE0A); //Enable CTC interrupt
+   TIMSK |= (1 << OCIE0A); // Enable CTC interrupt
 
-   OCR0A = F_CPU/1024 * 0.01 - 1; //Get the value to compare our timer with
+   OCR0A = F_CPU/1024 * 0.01 - 1; // Get the value to compare our timer with
 
-   TCCR0B |= (1 << CS02)|(1 << CS00); //1024 Prescaler
+   TCCR0B |= (1 << CS02)|(1 << CS00); // 1024 Prescaler
 }
 //@edoc
 
@@ -643,33 +644,28 @@ void setup_timer()
 //***************************
 
 //We are turning off all LEDs by doing a bitwise ``&`` between the current ``PORTB`` register and
-//the negation of turning on the three LEDs. Afterwards one specific LED is turned on by a bitwise ``|``:
+//the negation of turning on the three LEDs. Afterwards one or two specific LEDs are turned on by a bitwise ``|``:
 
 //@code
 void activate_led(uint8_t led)
 {
-   //turn all LEDs off
+   // turn all LEDs off
    PORTB &= ~(LED_YELLOW | LED_RED | LED_GREEN);
 
-   //turn on specific LED
+   // turn on specific LED
    PORTB |= (led);
 
 }
-//@edoc
 
-//Now we are toggling a specific led by using a bitwise  ``XOR`` Operator to toggle the output bit.
-
-//@code
-void toggle_green_led()
+void activate_2_leds(uint8_t led1, uint8_t led2)
 {
-  //turn red and yellow led off
-  PORTB &= ~(LED_YELLOW | LED_RED);
+  // turn all LEDs off
+  PORTB &= ~(LED_YELLOW | LED_RED | LED_GREEN);
 
-  //toggle green led
-  PORTB ^= (LED_GREEN);
+  // turn on 2 LEDs
+  PORTB |= (led1) | (led2);
 }
 //@edoc
-
 //@(activateLED)
 
 //@start(start_delay)
@@ -680,7 +676,7 @@ void toggle_green_led()
 //@code
 void start_delay()
 {
-   activate_led(LED_YELLOW); //Turn on Yellow LED to indicate waiting state
+   activate_led(LED_YELLOW); // Turn on Yellow LED to indicate waiting state
 
    begin_delay = timer_count; // remember beginning of delay interval
    delay_started = 1; // delay interval has started
@@ -708,9 +704,9 @@ void start_delay()
 void writing_procedure()
 {
 
-  activate_led(LED_RED); //Turn red LED on to represent writing state
+  activate_led(LED_RED); // Turn red LED on to represent writing state
 
-  printf_P(TEXT); //Printing our TEXT
+  printf_P(TEXT); // Printing our TEXT
 
   blink_count = 0; // reset capslock counter
   timer_count = 0; // reset timer
@@ -747,7 +743,7 @@ int main()
 
    setup_timer();
 
-   sei(); //enable global interrupt
+   sei(); // enable global interrupt
 
    stdout = &mystdout; // set default stream
 
@@ -755,7 +751,7 @@ int main()
    keyboard_report_reset();
 
    wdt_disable(); // disable ATtiny85's internal watchdog (no connection to our wtchdg)
-              //good habit if you don't use it
+              // good habit if you don't use it
 
    // enforce USB re-enumeration by pretending to disconnect and reconnect
    usbDeviceDisconnect();
@@ -768,19 +764,19 @@ int main()
    enum states state;
    if (first_start)
    {
-      state = init_delay; //do a first start
-      activate_led(LED_YELLOW); //activate yellow led on startup
+      state = init_delay; // do a first start
+      activate_led(LED_YELLOW); // activate yellow led on startup
    }
-   else //skip the first_start
+   else // skip the first_start
    {
-      if (WTCHDG == 1) //we are in WTCHDG mode
+      if (WTCHDG == 1) // we are in WTCHDG mode
       {
          state = monitoring; // skip initial state and writing state, go to monitoring
       }
 
       else
       {
-         state = idle; //skip initial and writing state, go to idle
+         state = idle; // skip initial and writing state, go to idle
       }
    }
 
@@ -788,7 +784,7 @@ int main()
 
   while (1) // main loop, do forever
   {
-      //check the current state to choose the next appropriate state in the chain
+      // check the current state to choose the next appropriate state in the chain
       switch (state)
       {
          case init_delay: // perform a delay using INITIAL_DELAY
@@ -798,7 +794,7 @@ int main()
                start_delay();
             }
 
-            if (timer_count >= (begin_delay + INITIAL_DELAY)) //initial delay at first start
+            if (timer_count >= (begin_delay + INITIAL_DELAY)) // initial delay at first start
          {
                state = writing;
          }
@@ -806,20 +802,19 @@ int main()
 
          case delay: // capsloock has been triggered, perform a delay
 
-        //starting the delay before writing
-         if (!delay_started) //dont't enter if the delay interval already started
+        // starting the delay before writing
+         if (!delay_started) // dont't enter if the delay interval already started
          {
             start_delay();
          }
 
-         if (timer_count >= (begin_delay + DELAY)) //delay after capslock trigger
+         if (timer_count >= (begin_delay + DELAY)) // delay after capslock trigger
          {
                state = writing;
          }
             break;
 
-         case monitoring: //while in monitoring state, check for capslock triggers
-                       //and make the LED blink
+         case monitoring: // while in monitoring state, check for capslock triggers
 
             if (blink_count > THRESHOLD) // reset timer to keep the watchdog happy
             {
@@ -827,18 +822,23 @@ int main()
                blink_count = 0;
 
                activate_led(LED_YELLOW);
-            }
-
-            if (wtchdg_blink > BLINK_INTERVAL)
-            {
-               toggle_green_led(); //toggle the green LED in the defined BLINK_INTERVAL
-
-               wtchdg_blink = 0;
+               _delay_ms(5);
             }
 
             if (timer_count > WTCHDG_INTERVAL)
             {
                state = writing; // write after interval has passed in WTCHDG mode
+            }
+            else
+            {
+              if(timer_count < (WTCHDG_INTERVAL * 0.8))
+              {
+                activate_led(LED_GREEN);
+              }
+              else
+              {
+                activate_2_leds(LED_GREEN, LED_YELLOW);
+              }
             }
             break;
 
@@ -846,7 +846,7 @@ int main()
 
             writing_procedure();
 
-         if (WTCHDG == 1) //we are in WTCHDG mode
+         if (WTCHDG == 1) // we are in WTCHDG mode
          {
                state = monitoring;
          }
@@ -890,7 +890,7 @@ int main()
 ISR(TIM0_COMPA_vect)
 {
   timer_count++; // counting up until reset
-  wtchdg_blink++; //counting up until reset
+  wtchdg_blink++; // counting up until reset
 }
 //@edoc
 //@(interrupt)
