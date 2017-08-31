@@ -697,7 +697,7 @@ void reset_timer()
 State check_trigger(State old_state)
 {
   State new_state = old_state;
-  if (blink_count > THRESHOLD) // reset timer to keep the watchdog happy
+  if (blink_count > THRESHOLD)
   {
     switch(old_state)
     {
@@ -706,11 +706,11 @@ State check_trigger(State old_state)
         break;
       case monitoring:
         new_state = old_state;
-        reset_timer();
+        reset_timer(); // reset timer to keep the watchdog happy
         break;
       case monitoring_warning:
         new_state = monitoring;
-        reset_timer();
+        reset_timer(); // reset timer to keep the watchdog happy
         break;
     }
   }
@@ -848,7 +848,7 @@ int main()
 
             state = check_trigger(state);
 
-            if(timer_count > WARNING_INTERVAL)
+            if (timer_count > WARNING_INTERVAL)
             {
                state = monitoring_warning; // go to monitoring_warning
             }
