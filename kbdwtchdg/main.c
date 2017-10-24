@@ -88,14 +88,14 @@ Copyright by Frank Zhao (http://www.frank-zhao.com), Philipp Rathmanner (https:/
 //@code
 //USER VARIABLES
 
-#define TEXT PSTR("Hello Worlt\bd\n") // Text to be written; use '\b' for backspace and '\n' for newline
+#define TEXT PSTR("Hello World!\n") // Text to be written; newline: \n, backspace: \b, escape: \e, tab: \t
 
 #define WTCHDG 1 // Change between two modes. If 1, WTCHDG mode is active
                  // (press capslock at least "THRESHOLD" times withing WTCHDG_INTERVAL,
                  // otherwise TEXT is written).
                  // If 0, waiting mode is active (press capslock > THRESHOLD times to write TEXT after DELAY).
 
-#define WTCHDG_INTERVAL 60000 // Set interval for WTCHDG mode (in 1/100 seconds)
+#define WTCHDG_INTERVAL 180000 // Set interval for WTCHDG mode (in 1/100 seconds)
 
 #define WARNING_THRESHOLD 0.9 // Percentage (given between 0 and 1) of WTCHDG_INTERVAL
                               // after which monitoring_warning state is entered (additional signal led)
@@ -112,9 +112,13 @@ uint8_t first_start = 1; // Set to 1 if you want kbdwtchdg to write
 
 #define THRESHOLD 3 // Pressing capslock more than 3 times triggers the counter
 
-#define SLOW_KEYS // Press keys for 50ms and wait 100ms between individual strokes.
-                  // Use if you experience lost key strokes.
+#define SLOW_KEYS    // Press a key for slow_key_delay milliseconds and then
+                     // wait the same time before the next key stroke.
+                     // Use if you experience lost key strokes.
+                     // Comment out if not needed.
             
+uint8_t slow_key_delay = 50; // key delay in milliseconds
+
 // End of USER VARIABLES
 
 // Defining the bits to set LED outputs:
@@ -548,6 +552,9 @@ void ASCII_to_keycode(uint8_t ascii)
          break;
          case '\b':
          keyboard_report.keycode[0] = 0x2A; // backspace
+		 break;
+		 case '\e':
+		 keyboard_report.keycode[0] = 0x29; // escape
       }
    }
 }
@@ -588,14 +595,14 @@ void type_out_char(uint8_t ascii, FILE *stream)
    send_report_once();
 
 #ifdef SLOW_KEYS
-   wait(50); // keep 'press' event for 50ms
+   wait(slow_key_delay); // keep 'press' event for some time
 #endif
    
    keyboard_report_reset(); // release keys
    send_report_once();
 
 #ifdef SLOW_KEYS
-   wait(100); // wait 100ms until next key press
+   wait(slow_key_delay); // wait until next key press
 #endif
 }
 
@@ -736,7 +743,7 @@ void write()
 {
   activate_led(LED_RED); // Turn red LED on to represent writing state
 
-  printf_P(TEXT); // Printing our TEXT
+  printf_P(TEXT);
 
   reset_timer();
   first_start = 0; // no first start anymore
